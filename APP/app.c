@@ -188,7 +188,7 @@ static  void  AppTaskStart (void *p_arg)
                       (OS_OPT    ) OS_OPT_TIME_HMSM_STRICT,
                       (OS_ERR   *)&os_err);
 
-        //BSP_LED_On(0);
+        BSP_LED_On(0);
 
         OSTimeDlyHMSM((CPU_INT16U) 0,
                       (CPU_INT16U) 0,
@@ -197,7 +197,7 @@ static  void  AppTaskStart (void *p_arg)
                       (OS_OPT    ) OS_OPT_TIME_HMSM_STRICT,
                       (OS_ERR   *)&os_err);
 
-        //BSP_LED_Off(0);
+        BSP_LED_Off(0);
     }
 
 }

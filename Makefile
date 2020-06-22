@@ -110,8 +110,8 @@ APP_MIN_OBJS := $(addprefix BSP/,OS/bsp_os.o bsp_int.o bsp.o cpu_bsp.o) APP/app.
 ASM_OBJS := $(ASM_SRCS:.s=.o)
 
 # all objects
-#OBJS := $(ASM_OBJS) $(OS_OBJS) $(LWIP_OBJS) $(APP_OBJS)
-OBJS := $(ASM_OBJS) $(OS_OBJS) $(APP_MIN_OBJS)
+OBJS := $(ASM_OBJS) $(OS_OBJS) $(LWIP_OBJS) $(APP_OBJS)
+#OBJS := $(ASM_OBJS) $(OS_OBJS) $(APP_MIN_OBJS)
 
 # ===============================================================
 # 4. Rules
