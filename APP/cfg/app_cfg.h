@@ -2,7 +2,7 @@
 *********************************************************************************************************
 *                                            EXAMPLE CODE
 *
-*                          (c) Copyright 2009-2015; Micrium, Inc.; Weston, FL
+*                          (c) Copyright 2009-2010; Micrium, Inc.; Weston, FL
 *
 *               All rights reserved.  Protected by international copyright laws.
 *
@@ -44,37 +44,6 @@
 #ifndef  __APP_CFG_H__
 #define  __APP_CFG_H__
 
-
-/*
-*********************************************************************************************************
-*                                            BSP CONFIGURATION
-*********************************************************************************************************
-*/
-
-#define  OS_CPU_FPU_EN                                DEF_ENABLED
-
-
-
-/*
-*********************************************************************************************************
-*                                     TRACE / DEBUG CONFIGURATION
-*********************************************************************************************************
-*/
-
-#define  TRACE_LEVEL_OFF                               0
-#define  TRACE_LEVEL_INFO                              1
-#define  TRACE_LEVEL_DBG                               2
-#define  TRACE_LEVEL_LOG                               3
-                                                                            /* Choose the level of debug messages                   */
-#define  BSP_CFG_TRACE_LEVEL                       TRACE_LEVEL_OFF
-#define  APP_CFG_TRACE_LEVEL                       TRACE_LEVEL_OFF
-
-
-#define  APP_CFG_TRACE                              printf
-
-
-#define  APP_TRACE_INFO(x)               ((APP_CFG_TRACE_LEVEL >= TRACE_LEVEL_INFO)  ? (void)(APP_CFG_TRACE x) : (void)0)
-#define  APP_TRACE_DBG(x)                ((APP_CFG_TRACE_LEVEL >= TRACE_LEVEL_DBG)   ? (void)(APP_CFG_TRACE x) : (void)0)
 
 
 #endif /* __APP_CFG_H__ */

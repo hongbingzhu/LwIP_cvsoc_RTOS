@@ -73,10 +73,9 @@ void TIMERinit(unsigned int Reload);
 void UARTinit(int BaudRate);
 
 /* ------------------------------------------------------------------------------------------------ */
-void UpdateNetTick(void)
+void App_TimeTickHook(void)
 {
-	OS_ERR err;
-	G_IPnetTime = OSTimeGet(&err);
+	G_IPnetTime = OSTimeGet();
 }
 
 /* ------------------------------------------------------------------------------------------------ */
@@ -123,8 +122,6 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 //	TIMERinit(((((SYS_FREQ/4)/100000)*(SYSTICK_MS*1000))/(10)));
 //	GICenable(29, 128, 1);							/* Private timer interrupt ID is 29 prio=mid	*/
 													/* The Cyclone V is set with a /4 prescaler		*/
-
-	OS_AppTimeTickHookPtr = UpdateNetTick;
 
 /* ------------------------------------------------ */
 /* Default static Addresses & Mask					*/

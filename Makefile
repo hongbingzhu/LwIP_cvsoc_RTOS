@@ -57,17 +57,19 @@ ASM_OBJS :=
 
 # uC/OS objects
 OS_DIR := OS
+OS_VER := uCOS-II
 
+# uC/OS-II or uC/OS-III objects, $(OS_VER)/Source needby uC/OS-II
 OS_INCS := uC-Common uC-Common/Auth uC-Common/KAL 
 OS_INCS += uC-CPU uC-CPU/ARM-Cortex-A/RealView uC-LIB
-OS_INCS += uCOS-III uCOS-III/Ports/ARM-Cortex-A/Generic/RealView
+OS_INCS += $(OS_VER) $(OS_VER)/Source $(OS_VER)/Ports/ARM-Cortex-A/Generic/RealView
 OS_INCS := $(addprefix $(OS_DIR)/,$(OS_INCS)) $(PUB_INCS)
 
-OS_SRCS := $(wildcard $(OS_DIR)/uCOS-III/Source/os_*.c)
-OS_SRCS += $(OS_DIR)/uCOS-III/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_c.c
-ASM_SRCS += $(OS_DIR)/uCOS-III/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_a_vfp-d32.s
+OS_SRCS := $(wildcard $(OS_DIR)/$(OS_VER)/Source/os_*.c)
+OS_SRCS += $(OS_DIR)/$(OS_VER)/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_c.c
+ASM_SRCS += $(OS_DIR)/$(OS_VER)/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_a_vfp-d32.s
 OS_SRCS += $(addprefix $(OS_DIR)/uC-LIB/,lib_ascii.c lib_math.c lib_mem.c lib_str.c)
-OS_SRCS += $(OS_DIR)/uC-Common/KAL/uCOS-III/kal.c
+OS_SRCS += $(OS_DIR)/uC-Common/KAL/$(OS_VER)/kal.c
 OS_SRCS += $(OS_DIR)/uC-CPU/Cache/ARM/armv7_generic_l1_l2c310_l2/cpu_cache_armv7_generic_l1_l2c310_l2.c
 ASM_SRCS += $(OS_DIR)/uC-CPU/Cache/ARM/armv7_generic_l1_l2c310_l2/RealView/cpu_cache_armv7_generic_l1_l2c310_l2_a.s
 ASM_SRCS += $(OS_DIR)/uC-CPU/ARM-Cortex-A/RealView/cpu_a.s
@@ -96,7 +98,7 @@ LWIP_PORT_OBJS := $(LWIP_DIR)/src/netif/etharp.o
 LWIP_OBJS := $(LWIP_CORE_OBJS) $(LWIP_IPV4_OBJS) $(LWIP_API_OBJS) $(LWIP_PORT_OBJS)
 
 # application objects
-APP_INCS := APP BSP BSP/OS $(OS_INCS) $(OS_DIR)/uCOS-III/Source $(LWIP_INCS)
+APP_INCS := APP BSP BSP/OS $(OS_INCS) $(LWIP_INCS)
 
 ALT_SRCS := $(addprefix APP/,alt_16550_uart.c alt_clock_manager.c alt_generalpurpose_io.c)
 APP_SRCS := $(addprefix BSP/,OS/bsp_os.c bsp_int.c bsp.c cpu_bsp.c)
@@ -137,7 +139,7 @@ src/timestamp.h:
 	@$(AS) $(ASFLAGS) -o $@ $<
 
 $(OS_OBJS): %.o: %.c
-	@echo Compiling uC/OS-III source $<
+	@echo Compiling $(OS_VER) source $<
 	@$(CC) $(OS_INCS:%=-I%) $(CFLAGS) --depend=$(subst .o,.d,$@) -c -o $@ $<
 
 $(LWIP_OBJS): %.o: %.c

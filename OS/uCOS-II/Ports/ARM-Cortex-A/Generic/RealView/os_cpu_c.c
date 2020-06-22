@@ -158,7 +158,7 @@ void  OSTaskCreateHook (OS_TCB *ptcb)
 #endif
 }
 #endif
-
+__weak void App_TaskCreateHook(OS_TCB *ptcb) { (void)ptcb; }
 
 /*
 *********************************************************************************************************
@@ -183,7 +183,7 @@ void  OSTaskDelHook (OS_TCB *ptcb)
 #endif
 }
 #endif
-
+__weak void App_TaskDelHook(OS_TCB *ptcb) { (void)ptcb; }
 
 /*
 *********************************************************************************************************
@@ -206,7 +206,7 @@ void  OSTaskIdleHook (void)
 #endif
 }
 #endif
-
+__weak void App_TaskIdleHook(void) { }
 
 /*
 *********************************************************************************************************
@@ -231,7 +231,7 @@ void  OSTaskReturnHook (OS_TCB  *ptcb)
 #endif
 }
 #endif
-
+__weak void App_TaskReturnHook(OS_TCB *ptcb) { (void)ptcb; }
 
 /*
 *********************************************************************************************************
@@ -252,7 +252,7 @@ void  OSTaskStatHook (void)
 #endif
 }
 #endif
-
+__weak void App_TaskStatHook(void) { }
 
 /*
 *********************************************************************************************************
@@ -495,7 +495,7 @@ void  OSTaskSwHook (void)
 #endif    
 }
 #endif
-
+__weak void App_TaskSwHook(void) { }
 
 /*
 *********************************************************************************************************
@@ -518,7 +518,7 @@ void  OSTCBInitHook (OS_TCB *ptcb)
 #endif
 }
 #endif
-
+__weak void App_TCBInitHook(OS_TCB *ptcb) { (void)ptcb; }
 
 /*
 *********************************************************************************************************
@@ -547,7 +547,7 @@ void  OSTimeTickHook (void)
 #endif
 }
 #endif
-
+__weak void App_TimeTickHook(void) { }
 
 /*
 *********************************************************************************************************

@@ -275,8 +275,7 @@ void Time_Update(void)
 #include "os.h"
 u32_t sys_now(void)
 {
-	OS_ERR err;
-	return OSTimeGet(&err);
+	return OSTimeGet();
 }
 
 /* EOF */

@@ -3,7 +3,7 @@
 *                                                uC/CPU
 *                                    CPU CONFIGURATION & PORT LAYER
 *
-*                          (c) Copyright 2004-2015; Micrium, Inc.; Weston, FL
+*                          (c) Copyright 2004-2013; Micrium, Inc.; Weston, FL
 *
 *               All rights reserved.  Protected by international copyright laws.
 *
@@ -29,7 +29,7 @@
 *                                              TEMPLATE
 *
 * Filename      : cpu_cfg.h
-* Version       : V1.30.02
+* Version       : V1.30.00
 * Programmer(s) : SR
 *                 ITJ
 *                 JBL

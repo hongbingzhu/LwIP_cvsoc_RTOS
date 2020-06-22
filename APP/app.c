@@ -2,7 +2,7 @@
 *********************************************************************************************************
 *                                            EXAMPLE CODE
 *
-*                          (c) Copyright 2009-2015; Micrium, Inc.; Weston, FL
+*                          (c) Copyright 2009-2014; Micrium, Inc.; Weston, FL
 *
 *               All rights reserved.  Protected by international copyright laws.
 *
@@ -45,12 +45,12 @@
 #include  <bsp.h>
 #include  <bsp_int.h>
 #include  <bsp_os.h>
+#include  <cpu_cache.h>
 
 #include  <cpu.h>
 #include  <cpu_core.h>
 
-#include  <Source/os.h>
-#include  <os_cfg_app.h>
+#include  <os.h>
 
 
 /*
@@ -59,15 +59,14 @@
 *********************************************************************************************************
 */
 
-static   OS_TCB       AppTaskStartTCB;
+#define OS_APP_TASK_START_PRIO		5
 #define	APP_START_TASK_STACK_SIZE	4096u
-static  CPU_STK       AppTaskStartStk[APP_START_TASK_STACK_SIZE];
+CPU_STK AppTaskStartStk[APP_START_TASK_STACK_SIZE];
 
-static   OS_TCB       WatchDogTaskTCB;
+#define OS_WATCH_DOG_TASK_PRIO		2
 #define WATCH_DOG_TASK_STACK_SIZE	1024u
-static  CPU_STK       WatchDogTaskStk[WATCH_DOG_TASK_STACK_SIZE];
+CPU_STK WatchDogTaskStk[WATCH_DOG_TASK_STACK_SIZE];
 
-static void WatchDogTask (void *p_arg);
 
 /*
 *********************************************************************************************************
@@ -75,7 +74,8 @@ static void WatchDogTask (void *p_arg);
 *********************************************************************************************************
 */
 
-static  void  AppTaskStart (void *p_arg);
+static  void  AppTaskStart              (void        *p_arg);
+static  void  WatchDogTask              (void        *p_arg);
 
 CPU_BOOLEAN  AppInit_TCPIP (void);
 
@@ -97,9 +97,9 @@ CPU_BOOLEAN  AppInit_TCPIP (void);
 
 int main ()
 {
-    OS_ERR os_err;
+    INT8U os_err;
 
-    BSP_WatchDog_Reset();                                       /* Reset the watchdog.                                  */
+    BSP_WatchDog_Reset();                                       /* Reset the watchdog as soon as possible.              */
 
                                                                 /* Scatter loading is complete. Now the caches can be activated.*/
     BSP_BranchPredictorEn();                                    /* Enable branch prediction.                            */
@@ -116,45 +116,40 @@ int main ()
     BSP_Init();
 
 
-    OSInit(&os_err);
+    OSInit();
 
 
-    OSTaskCreate((OS_TCB     *)&WatchDogTaskTCB,                /* Create the watchdog task                             */
-                 (CPU_CHAR   *)"Watchdog task",
-                 (OS_TASK_PTR ) WatchDogTask,
-                 (void       *) 0,
-                 (OS_PRIO     ) 2,
-                 (CPU_STK    *)&WatchDogTaskStk[0],
-                 (CPU_STK     )(WATCH_DOG_TASK_STACK_SIZE / 10u),
-                 (CPU_STK_SIZE) WATCH_DOG_TASK_STACK_SIZE,
-                 (OS_MSG_QTY  ) 0,
-                 (OS_TICK     ) 0,
-                 (void       *) 0,
-                 (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
-                 (OS_ERR     *)&os_err);
+    os_err = OSTaskCreateExt((void (*)(void *)) AppTaskStart,   /* Create the start task.                               */
+                             (void          * ) 0,
+                             (OS_STK        * )&AppTaskStartStk[APP_START_TASK_STACK_SIZE - 1],
+                             (INT8U           ) OS_APP_TASK_START_PRIO,
+                             (INT16U          ) OS_APP_TASK_START_PRIO,
+                             (OS_STK        * )&AppTaskStartStk[0],
+                             (INT32U          ) APP_START_TASK_STACK_SIZE,
+                             (void          * )0,
+                             (INT16U          )(OS_TASK_OPT_STK_CLR | OS_TASK_OPT_STK_CHK));
+    OSTaskNameSet(OS_APP_TASK_START_PRIO, (INT8U *)(void *)"AppStart", &os_err);
 
+    os_err = OSTaskCreateExt((void (*)(void *)) WatchDogTask,   /* Create the watchdog task.                            */
+                             (void          * ) 0,
+                             (OS_STK        * )&WatchDogTaskStk[WATCH_DOG_TASK_STACK_SIZE - 1],
+                             (INT8U           ) OS_WATCH_DOG_TASK_PRIO,
+                             (INT16U          ) OS_WATCH_DOG_TASK_PRIO,
+                             (OS_STK        * )&WatchDogTaskStk[0],
+                             (INT32U          ) WATCH_DOG_TASK_STACK_SIZE,
+                             (void          * )0,
+                             (INT16U          )(OS_TASK_OPT_STK_CLR | OS_TASK_OPT_STK_CHK));
+    OSTaskNameSet(OS_WATCH_DOG_TASK_PRIO, (INT8U *)(void *)"WatchDog", &os_err);
 
-    OSTaskCreate((OS_TCB     *)&AppTaskStartTCB,                /* Create the start task                                    */
-                 (CPU_CHAR   *)"App Task Start",
-                 (OS_TASK_PTR ) AppTaskStart,
-                 (void       *) 0,
-                 (OS_PRIO     ) 5,
-                 (CPU_STK    *)&AppTaskStartStk[0],
-                 (CPU_STK     )(APP_START_TASK_STACK_SIZE / 10u),
-                 (CPU_STK_SIZE) APP_START_TASK_STACK_SIZE,
-                 (OS_MSG_QTY  ) 0,
-                 (OS_TICK     ) 0,
-                 (void       *) 0,
-                 (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
-                 (OS_ERR     *)&os_err);
-
+    if (os_err != OS_ERR_NONE) {
+        ; /* Handle error. */
+    }
 
     CPU_IntEn();
 
-    OSStart(&os_err);
+    OSStart();
 
 }
-
 
 /*
 *********************************************************************************************************
@@ -174,38 +169,35 @@ int main ()
 
 static  void  AppTaskStart (void *p_arg)
 {
-    OS_ERR       os_err;
 
-    BSP_OS_TmrTickInit(OS_CFG_TICK_RATE_HZ);                    /* Configure and enable OS tick interrupt.              */
+    BSP_OS_TmrTickInit(OS_TICKS_PER_SEC);                       /* Configure and enable OS tick interrupt.              */
 
-
-    //AppInit_TCPIP();
+    //AppInit_TCPIP();                                            /* Initialize uC/TCPIP                                  */
 
     for(;;) {
     	int lwip_app_main(void);
     	lwip_app_main();
-/*        OSTimeDlyHMSM((CPU_INT16U) 0,
-                      (CPU_INT16U) 0,
-                      (CPU_INT16U) 0,
-                      (CPU_INT32U) 500,
-                      (OS_OPT    ) OS_OPT_TIME_HMSM_STRICT,
-                      (OS_ERR   *)&os_err);
-
-        BSP_LED_On(0);
-
-        OSTimeDlyHMSM((CPU_INT16U) 0,
-                      (CPU_INT16U) 0,
-                      (CPU_INT16U) 0,
-                      (CPU_INT32U) 500,
-                      (OS_OPT    ) OS_OPT_TIME_HMSM_STRICT,
-                      (OS_ERR   *)&os_err);
-
-        BSP_LED_Off(0);*/
+        //OSTimeDlyHMSM(0, 0, 0, 500);
+        //BSP_LED_On(0);
+        //OSTimeDlyHMSM(0, 0, 0, 500);
+        //BSP_LED_Off(0);
     }
 
 }
 
 #if 0
+/*
+*********************************************************************************************************
+*                                           AppInit_TCPIP()
+*
+* Description : TCP-IP startup code.
+*
+* Arguments   : none.
+*
+* Returns     : none.
+*********************************************************************************************************
+*/
+
 CPU_BOOLEAN  AppInit_TCPIP (void)
 {
     NET_IF_NBR      if_nbr;
@@ -228,18 +220,19 @@ CPU_BOOLEAN  AppInit_TCPIP (void)
         return (DEF_FAIL);
     }
 
-                                                                /* -------------- ADD ETHERNET INTERFACE -------------- */
-                                                                /* See Note #7.                                         */
-    if_nbr = NetIF_Add((void    *)&NetIF_API_Ether,             /* See Note #7b.                                        */
-                       (void    *)&NetDev_API_HPS_EMAC,         /* Device driver API,    See Note #7c.                  */
-                       (void    *)&NetDev_BSP_BoardDev_Nbr,     /* BSP API,              See Note #7d.                  */
-                       (void    *)&NetDev_Cfg_Ether_1,          /* Device configuration, See Note #7e.                  */
-                       (void    *)&NetPhy_API_ksz9021r,         /* PHY driver API,       See Note #7f.                  */
-                       (void    *)&NetPhy_Cfg_Ether_1,          /* PHY configuration,    See Note #7g.                  */
-                                  &err_net);
+    /* -------------- ADD ETHERNET INTERFACE -------------- */
+    /* See Note #7.                                         */
+    if_nbr = NetIF_Add((void    *)&NetIF_API_Ether,  /* See Note #7b.                                        */
+            (void    *)&NetDev_API_HPS_EMAC,         /* Device driver API,    See Note #7c.                  */
+            (void    *)&NetDev_BSP_BoardDev_Nbr,     /* BSP API,              See Note #7d.                  */
+            (void    *)&NetDev_Cfg_Ether_1,          /* Device configuration, See Note #7e.                  */
+            (void    *)&NetPhy_API_ksz9021r,         /* PHY driver API,       See Note #7f.                  */
+            (void    *)&NetPhy_Cfg_Ether_1,          /* PHY configuration,    See Note #7g.                  */
+            &err_net);
     if (err_net != NET_IF_ERR_NONE) {
         return (DEF_FAIL);
     }
+
 
                                                                 /* ------------- START ETHERNET INTERFACE ------------- */
     NetIF_Start(if_nbr, &err_net);                              /* See Note #8.                                         */
@@ -291,6 +284,7 @@ CPU_BOOLEAN  AppInit_TCPIP (void)
     return (DEF_OK);
 }
 #endif
+
 /*
 *********************************************************************************************************
 *                                            WatchDogTask()
@@ -306,19 +300,12 @@ CPU_BOOLEAN  AppInit_TCPIP (void)
 
 void  WatchDogTask (void *p_arg)
 {
-    OS_ERR os_err;
-
     while (DEF_TRUE) {
 
         BSP_WatchDog_Reset();                                   /* Reset the watchdog.                                  */
 
 
-        OSTimeDlyHMSM((CPU_INT16U) 0,
-                      (CPU_INT16U) 0,
-                      (CPU_INT16U) 0,
-                      (CPU_INT32U) 500,
-                      (OS_OPT    ) OS_OPT_TIME_HMSM_STRICT,
-                      (OS_ERR   *)&os_err);
+        OSTimeDlyHMSM(0, 0, 0, 500);
         BSP_LED_Flash(0);
     }
 }

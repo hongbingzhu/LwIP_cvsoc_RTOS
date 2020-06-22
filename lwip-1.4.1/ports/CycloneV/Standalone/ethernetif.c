@@ -89,13 +89,13 @@ static void low_level_init(struct netif *netif)
 
 	netif->hwaddr_len = ETHARP_HWADDR_LEN;		/* Set the netif MAC hardware address length		*/
 	GetMACaddr(&netif->hwaddr[0]);				/* Use a fct to allow reading from dardware			*/
-    netif->mtu        = NETIF_MTU;				/* Set the netif maximum transfer unit				*/
+	netif->mtu        = NETIF_MTU;				/* Set the netif maximum transfer unit				*/
 	netif->flags      = NETIF_FLAG_BROADCAST	/* Accept broadcast address and ARP traffic			*/
 	                  | NETIF_FLAG_ETHARP
 	                  | NETIF_FLAG_LINK_UP;
 
 	ETH_MACAddressConfig(ETH_MAC_Address0, netif->hwaddr);	/* I MAC address in ethernet MAC		*/
-  	ETH_DMATxDescChainInit(DMATxDscrTab, &Tx_Buff[0][0], ETH_TXBUFNB);/* Init Tx Desc list: Chain	*/
+	ETH_DMATxDescChainInit(DMATxDscrTab, &Tx_Buff[0][0], ETH_TXBUFNB);/* Init Tx Desc list: Chain	*/
 	ETH_DMARxDescChainInit(DMARxDscrTab, &Rx_Buff[0][0], ETH_RXBUFNB);/* Init Rx Desc list: Chain	*/
 
   #ifdef CHECKSUM_BY_HARDWARE
@@ -142,7 +142,7 @@ u32_t        Nbytes;
 	for(InBuf8=p ; InBuf8!=NULL ; InBuf8=InBuf8->next) {
 		SMEMCPY((u8_t*)&DMAbuf[Nbytes], InBuf8->payload, InBuf8->len);
 		Nbytes += InBuf8->len;
-   	}
+	}
 	ETH_Prepare_Transmit_Descriptors(Nbytes);
 
 	CLAIM_PAD(p);								/* Reclaim the padding word if needed				*/
@@ -177,13 +177,13 @@ volatile  ETH_DMADESCTypeDef *DMARxNextDesc;
 	Frame   = ETH_Get_Received_Frame();			/* Grab the received frame							*/
 	Len     = (int)Frame.length;				/* Size of the packet								*/
 
-#if ETH_PAD_SIZE
-  Len += ETH_PAD_SIZE; /* allow room for Ethernet padding */
-#endif
+  #if ETH_PAD_SIZE
+	Len += ETH_PAD_SIZE; /* allow room for Ethernet padding */
+  #endif
 
 	Buf8    = (u8_t *)Frame.buffer;				/* Pointer to the packet							*/
-    BufDst  = pbuf_alloc(PBUF_RAW, Len, PBUF_POOL);	/* Get the buffer to return from the pool	*/
-    if (BufDst != NULL) { 					/* Copy RX frame (linked list) in dst buffer		*/
+	BufDst  = pbuf_alloc(PBUF_RAW, Len, PBUF_POOL);	/* Get the buffer to return from the pool	*/
+	if (BufDst != NULL) { 					/* Copy RX frame (linked list) in dst buffer		*/
 			DROP_PAD(BufDst);					/* Drop the padding word if needed					*/
 
 		for (Bptr=BufDst ; Bptr!=NULL ; Bptr=Bptr->next) {
