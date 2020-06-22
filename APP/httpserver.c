@@ -39,6 +39,7 @@
 #include "NetAddr.h"
 #include "httpd.h"
 #include "WebServer.h"
+#include "os.h"
 
 /* ------------------------------------------------ */
 
@@ -70,6 +71,13 @@ int  __putchar(int);
 void Time_Update(void);
 void TIMERinit(unsigned int Reload);
 void UARTinit(int BaudRate);
+
+/* ------------------------------------------------------------------------------------------------ */
+void UpdateNetTick(void)
+{
+	OS_ERR err;
+	G_IPnetTime = OSTimeGet(&err);
+}
 
 /* ------------------------------------------------------------------------------------------------ */
 
@@ -115,6 +123,8 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 //	TIMERinit(((((SYS_FREQ/4)/100000)*(SYSTICK_MS*1000))/(10)));
 //	GICenable(29, 128, 1);							/* Private timer interrupt ID is 29 prio=mid	*/
 													/* The Cyclone V is set with a /4 prescaler		*/
+
+	OS_AppTimeTickHookPtr = UpdateNetTick;
 
 /* ------------------------------------------------ */
 /* Default static Addresses & Mask					*/
@@ -309,7 +319,7 @@ void UARTinit(int BaudRate)
 
 /* ------------------------------------------------------------------------------------------------ */
 
-#if 0 //!defined(_write_r)
+#if defined(__GNUC__) && !defined(_write_r)
 _ssize_t _write_r (struct _reent *rreenn, int fd, const void *vbuf, size_t len)
 {
 const char *buf;
@@ -332,7 +342,7 @@ int   size;
 
 /* ------------------------------------------------------------------------------------------------ */
 
-#if 0 //!defined(_read_r)
+#if defined(__GNUC__) && !defined(_read_r)
 _ssize_t  _read_r(struct _reent *rreenn, int fd, void *vbuf, size_t size)
 {
 char    *buf;
@@ -352,9 +362,9 @@ uint32_t uu;
 
 int __putchar(int ccc)
 {
-char     cc;
-uint32_t ss;
-uint32_t uu;
+	char     cc;
+	uint32_t ss;
+	uint32_t uu;
 
 	cc = (char )ccc;
 	alt_16550_fifo_size_get_tx(&G_UARThndl, &ss);
@@ -370,8 +380,8 @@ uint32_t uu;
 
 int GetKey(void)
 {
-char     ccc;
-uint32_t uu;
+	char     ccc;
+	uint32_t uu;
 
 	ccc = (char)0;
 	alt_16550_fifo_level_get_rx(&G_UARThndl, &uu);
@@ -382,9 +392,29 @@ uint32_t uu;
 }
 
 /* ------------------------------------------------------------------------------------------------ */
+
+#if defined(__GNUC__)
+
+#elif defined(__CC_ARM)
+struct __FILE
+{
+  int dummyVar; //Just for the sake of redefining __FILE, we won't we using it anyways ;)
+};
+
+FILE __stdout; //STDOUT
+FILE __stdin;  //STDIN
+int fputc(int c, FILE * stream) { if (c == '\n') __putchar('\r'); return __putchar(c); }
+
+int fgetc(FILE * stream) { return GetKey(); }
+
+#elif defined(__IAR_SYSTEMS_ICC__)
+
+#endif
+
+/* ------------------------------------------------------------------------------------------------ */
 /* Dummies to remove linker warnings about function used when non semi-hosted						*/
 /* ------------------------------------------------------------------------------------------------ */
-#ifdef _GNU_
+#if  defined(__GNUC__)
 int _close (int xxx)
 {
 	xxx = xxx;

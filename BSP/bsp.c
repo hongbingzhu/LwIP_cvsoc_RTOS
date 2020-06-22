@@ -210,6 +210,11 @@ void  BSP_LED_Off  (CPU_INT32U led)
 	CV_REG_GPIO_DR0 &= ~(DEF_BIT_16);
 }
 
+void  BSP_LED_Flash(CPU_INT32U led)
+{
+	CV_REG_GPIO_DR0 ^= (DEF_BIT_16);
+}
+
 
 /*
 *********************************************************************************************************

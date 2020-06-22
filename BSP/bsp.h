@@ -65,6 +65,8 @@ void        BSP_LED_On         (CPU_INT32U led);
 
 void        BSP_LED_Off        (CPU_INT32U led);
 
+void        BSP_LED_Flash      (CPU_INT32U led);
+
 void        BSP_BranchPredictorEn (void);
 
 void        BSP_L2C310Config   (void);

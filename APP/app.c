@@ -60,10 +60,12 @@
 */
 
 static   OS_TCB       AppTaskStartTCB;
-static  CPU_STK       AppTaskStartStk[2048u];
+#define	APP_START_TASK_STACK_SIZE	4096u
+static  CPU_STK       AppTaskStartStk[APP_START_TASK_STACK_SIZE];
 
 static   OS_TCB       WatchDogTaskTCB;
-static  CPU_STK       WatchDogTaskStk[2048u];
+#define WATCH_DOG_TASK_STACK_SIZE	1024u
+static  CPU_STK       WatchDogTaskStk[WATCH_DOG_TASK_STACK_SIZE];
 
 static void WatchDogTask (void *p_arg);
 
@@ -102,9 +104,10 @@ int main ()
                                                                 /* Scatter loading is complete. Now the caches can be activated.*/
     BSP_BranchPredictorEn();                                    /* Enable branch prediction.                            */
     BSP_L2C310Config();                                         /* Configure the L2 cache controller.                   */
-    BSP_CachesEn();                                             /* Enable L1 I&D caches + L2 unified cache.             */
+//    BSP_CachesEn();                                             /* Enable L1 I&D caches + L2 unified cache.             */
 
-
+    void GICinit(void);
+    GICinit();
 
     CPU_Init();
 
@@ -122,8 +125,8 @@ int main ()
                  (void       *) 0,
                  (OS_PRIO     ) 2,
                  (CPU_STK    *)&WatchDogTaskStk[0],
-                 (CPU_STK     )(2048u / 10u),
-                 (CPU_STK_SIZE) 2048u,
+                 (CPU_STK     )(WATCH_DOG_TASK_STACK_SIZE / 10u),
+                 (CPU_STK_SIZE) WATCH_DOG_TASK_STACK_SIZE,
                  (OS_MSG_QTY  ) 0,
                  (OS_TICK     ) 0,
                  (void       *) 0,
@@ -137,8 +140,8 @@ int main ()
                  (void       *) 0,
                  (OS_PRIO     ) 5,
                  (CPU_STK    *)&AppTaskStartStk[0],
-                 (CPU_STK     )(2048u / 10u),
-                 (CPU_STK_SIZE) 2048u,
+                 (CPU_STK     )(APP_START_TASK_STACK_SIZE / 10u),
+                 (CPU_STK_SIZE) APP_START_TASK_STACK_SIZE,
                  (OS_MSG_QTY  ) 0,
                  (OS_TICK     ) 0,
                  (void       *) 0,
@@ -180,8 +183,8 @@ static  void  AppTaskStart (void *p_arg)
 
     for(;;) {
     	int lwip_app_main(void);
-    	//lwip_app_main();
-      OSTimeDlyHMSM((CPU_INT16U) 0,
+    	lwip_app_main();
+/*        OSTimeDlyHMSM((CPU_INT16U) 0,
                       (CPU_INT16U) 0,
                       (CPU_INT16U) 0,
                       (CPU_INT32U) 500,
@@ -197,7 +200,7 @@ static  void  AppTaskStart (void *p_arg)
                       (OS_OPT    ) OS_OPT_TIME_HMSM_STRICT,
                       (OS_ERR   *)&os_err);
 
-        BSP_LED_Off(0);
+        BSP_LED_Off(0);*/
     }
 
 }
@@ -316,5 +319,6 @@ void  WatchDogTask (void *p_arg)
                       (CPU_INT32U) 500,
                       (OS_OPT    ) OS_OPT_TIME_HMSM_STRICT,
                       (OS_ERR   *)&os_err);
+        BSP_LED_Flash(0);
     }
 }

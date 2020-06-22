@@ -36,7 +36,7 @@
 #define OS_CFG_H
 
                                              /* ---------------------------- MISCELLANEOUS -------------------------- */
-#define OS_CFG_APP_HOOKS_EN             0u   /* Enable (1) or Disable (0) application specific hooks                  */
+#define OS_CFG_APP_HOOKS_EN             1u   /* Enable (1) or Disable (0) application specific hooks                  */
 #define OS_CFG_ARG_CHK_EN               0u   /* Enable (1) or Disable (0) argument checking                           */
 #define OS_CFG_CALLED_FROM_ISR_CHK_EN   0u   /* Enable (1) or Disable (0) check for called from ISR                   */
 #define OS_CFG_DBG_EN                   0u   /* Enable (1) debug code/variables                                       */

@@ -26,17 +26,17 @@
 							<tool id="com.arm.tool.librarian.240329460" name="ARM Librarian 5" superClass="com.arm.tool.librarian"/>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="com.arm.toolchain.baremetal.535064381.249686167" name="/" resourcePath="lwip-1.4.1/ports/win32">
-						<toolChain id="com.arm.toolchain.baremetal.197151449" name="com.arm.toolchain.baremetal" superClass="com.arm.toolchain.baremetal" unusedChildren="">
-							<tool id="com.arm.tool.c.compiler.528174363" name="ARM C Compiler 5" superClass="com.arm.tool.c.compiler.1029121915"/>
-							<tool id="com.arm.tool.cpp.compiler.703946341" name="ARM C++ Compiler 5" superClass="com.arm.tool.cpp.compiler.812229464"/>
-							<tool id="com.arm.tool.assembler.261346153" name="ARM Assembler 5" superClass="com.arm.tool.assembler.610010194"/>
-							<tool id="com.arm.tool.c.linker.2015718785" name="ARM Linker 5" superClass="com.arm.tool.c.linker.833058765"/>
-							<tool id="com.arm.tool.librarian.1475088729" name="ARM Librarian 5" superClass="com.arm.tool.librarian.240329460"/>
+					<folderInfo id="com.arm.toolchain.baremetal.535064381.510389014" name="/" resourcePath="OS/uCOS-III/Cfg">
+						<toolChain id="com.arm.toolchain.baremetal.1979655144" name="com.arm.toolchain.baremetal" superClass="com.arm.toolchain.baremetal" unusedChildren="">
+							<tool id="com.arm.tool.c.compiler.1061709144" name="ARM C Compiler 5" superClass="com.arm.tool.c.compiler.1029121915"/>
+							<tool id="com.arm.tool.cpp.compiler.663121185" name="ARM C++ Compiler 5" superClass="com.arm.tool.cpp.compiler.812229464"/>
+							<tool id="com.arm.tool.assembler.1259690867" name="ARM Assembler 5" superClass="com.arm.tool.assembler.610010194"/>
+							<tool id="com.arm.tool.c.linker.1371132587" name="ARM Linker 5" superClass="com.arm.tool.c.linker.833058765"/>
+							<tool id="com.arm.tool.librarian.1887368011" name="ARM Librarian 5" superClass="com.arm.tool.librarian.240329460"/>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="lwip-1.4.1/ports/win32|lwip-1.4.1/ports/unix|lwip-1.4.1/ports/STM32F2x7|lwip-1.4.1/ports/old|OS/uC-CPU/Cache/ARM/armv7_generic_l1_l2c310_l2/IAR|OS/uC-CPU/Cache/ARM/armv7_generic_l1_l2c310_l2/GNU|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_a_vfp-d16.s|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_a_vfp-none.s|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/IAR|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/GNU|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/CCS|OS/uC-Common/KAL/uCOS-II|OS/uC-CPU/ARM-Cortex-A/IAR|OS/uC-CPU/ARM-Cortex-A/GNU|OS/uC-CPU/ARM-Cortex-A/CCS|OS/uC-CPU/Cache/NiosII|OS/uC-CPU/Cache/Freescale|OS/uC-CPU/Cache/ARM/armv7_generic_l1|OS/uC-CPU/Cache/ARM/armv5_generic_l1|OS/uCOS-II" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="OS/uCOS-III/Cfg|lwip-1.4.1/ports/win32|lwip-1.4.1/ports/unix|lwip-1.4.1/ports/STM32F2x7|lwip-1.4.1/ports/old|OS/uC-CPU/Cache/ARM/armv7_generic_l1_l2c310_l2/IAR|OS/uC-CPU/Cache/ARM/armv7_generic_l1_l2c310_l2/GNU|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_a_vfp-d16.s|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_a_vfp-none.s|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/IAR|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/GNU|OS/uCOS-III/Ports/ARM-Cortex-A/Generic/CCS|OS/uC-Common/KAL/uCOS-II|OS/uC-CPU/ARM-Cortex-A/IAR|OS/uC-CPU/ARM-Cortex-A/GNU|OS/uC-CPU/ARM-Cortex-A/CCS|OS/uC-CPU/Cache/NiosII|OS/uC-CPU/Cache/Freescale|OS/uC-CPU/Cache/ARM/armv7_generic_l1|OS/uC-CPU/Cache/ARM/armv5_generic_l1|OS/uCOS-II" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
