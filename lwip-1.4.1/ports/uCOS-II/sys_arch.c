@@ -48,17 +48,9 @@
 #endif
 
 /*----------------------------------------------------------------------------*/
-/*                      DEFINITIONS                                           */
-/*----------------------------------------------------------------------------*/
-typedef struct mem_leaks {
-	void *location;
-	INT32U size;
-	struct mem_leaks *next;
-} MEM_LEAKS;
-
-/*----------------------------------------------------------------------------*/
 /*                      VARIABLES                                             */
 /*----------------------------------------------------------------------------*/
+
 static OS_MEM *pQueueMem, *pStackMem;
 
 const void *const pvNullPointer = (mem_ptr_t *)0xffffffff;
@@ -67,16 +59,12 @@ OS_STK    LwIP_Task_Stk[LWIP_TASK_MAX * LWIP_STK_SIZE] __attribute__((aligned(4)
 
 INT8U     LwIP_task_priopity_stask[LWIP_TASK_MAX];
 
-struct mem_leaks *MemoryLeaks = NULL;
-int       MaxUserMemory  = 0;
-int       CurrUserMemory = 0;
-
 /*----------------------------------------------------------------------------*/
 /*                      PROTOTYPES                                            */
 /*----------------------------------------------------------------------------*/
-/*--------------------Creates an empty mailbox.-------------------------------*/
 
 
+/*------------------- Creates an empty mailbox. ------------------------------*/
 err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 {
 	/* prarmeter "size" can be ignored in your implementation. */
@@ -107,7 +95,7 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 	}
 }
 
-/*-----------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
 /*
   Deallocates a mailbox. If there are messages still present in the
   mailbox when the mailbox is deallocated, it is an indication of a
@@ -129,7 +117,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
 	*mbox = NULL;
 }
 
-/*-----------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
 //   Posts the "msg" to the mailbox.
 void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 {
@@ -156,7 +144,7 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 	return ERR_OK;
 }
 
-/*-----------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
 /*
   Blocks the thread until a message arrives in the mailbox, but does
   not block the thread longer than "timeout" milliseconds (similar to
@@ -178,7 +166,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 	u32_t   ucos_timeout, timeout_new;
 	void    *temp;
 	sys_mbox_t m_box = *mbox;
-	/* convert to timetick */
+	/* convert to OS time tick */
 	if (timeout != 0) {
 		ucos_timeout = (timeout * OS_TICKS_PER_SEC) / 1000;
 		if (ucos_timeout < 1)
@@ -187,7 +175,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 
 	timeout = OSTimeGet();
 
-	temp = OSQPend(m_box->pQ, (u16_t)ucos_timeout, &ucErr);
+	temp = OSQPend(m_box->pQ, ucos_timeout, &ucErr);
 
 	if (msg != NULL) {
 		if (temp == (void *)&pvNullPointer)
@@ -201,20 +189,18 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 	else {
 		LWIP_ASSERT("OSQPend ", ucErr == OS_NO_ERR);
 
-		timeout_new = OSTimeGet();
-		if (timeout_new > timeout) timeout_new = timeout_new - timeout;
-		else timeout_new = 0xffffffff - timeout + timeout_new;
+		timeout_new = OSTimeGet() - timeout;	/* do NOT worry about u32 overflow */
 		/* convert to millisecond */
 		timeout = timeout_new * 1000 / OS_TICKS_PER_SEC + 1;
 	}
 	return timeout;
 }
 
-/**
-  * Check if an mbox is valid/allocated:
-  * @param sys_mbox_t *mbox pointer mail box
-  * @return 1 for valid, 0 for invalid
-  */
+/*
+ * Check if an mbox is valid/allocated:
+ * @param sys_mbox_t *mbox pointer mail box
+ * @return 1 for valid, 0 for invalid
+ */
 int sys_mbox_valid(sys_mbox_t *mbox)
 {
 	sys_mbox_t  m_box = *mbox;
@@ -227,17 +213,15 @@ int sys_mbox_valid(sys_mbox_t *mbox)
 	return ret;
 }
 
-/**
-  * Set an mbox invalid so that sys_mbox_valid returns 0
-  */
+/* Set an mbox invalid so that sys_mbox_valid returns 0 */
 void sys_mbox_set_invalid(sys_mbox_t *mbox)
 {
 
 }
 
 /*
- *  Creates and returns a new semaphore. The "count" argument specifies
- *  the initial state of the semaphore. TBD finish and test
+ * Creates and returns a new semaphore. The "count" argument specifies
+ * the initial state of the semaphore. TBD finish and test
  */
 err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 {
@@ -274,7 +258,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 	u32_t ucos_timeout, timeout_new;
 
 	if (timeout != 0) {
-		ucos_timeout = (timeout * OS_TICKS_PER_SEC) / 1000; // convert to timetick
+		ucos_timeout = (timeout * OS_TICKS_PER_SEC) / 1000; // convert to OS time tick
 		if (ucos_timeout < 1)
 			ucos_timeout = 1;
 	}
@@ -282,33 +266,26 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 
 	timeout = OSTimeGet();
 
-	OSSemPend(*sem, (u16_t)ucos_timeout, (u8_t *)&ucErr);
+	OSSemPend(*sem, ucos_timeout, &ucErr);
 	/*  only when timeout! */
 	if (ucErr == OS_ERR_TIMEOUT)
 		timeout = SYS_ARCH_TIMEOUT;
 	else {
-
 		/* for pbuf_free, may be called from an ISR */
-		timeout_new = OSTimeGet();
-		if (timeout_new >= timeout) timeout_new = timeout_new - timeout;
-		else timeout_new = 0xffffffff - timeout + timeout_new;
+		timeout_new = OSTimeGet() - timeout;	/* do NOT worry about u32 overflow */
 		/* convert to milisecond */
-		timeout = (timeout_new * 1000 / OS_TICKS_PER_SEC + 1);
+		timeout = timeout_new * 1000 / OS_TICKS_PER_SEC + 1;
 	}
 	return timeout;
 }
 
-/*
- *  Signals a semaphore
- */
+/* Signals a semaphore */
 void sys_sem_signal(sys_sem_t *sem)
 {
 	OSSemPost(*sem);
 }
 
-/*
- *  Deallocates a semaphore
- */
+/* Deallocates a semaphore */
 void sys_sem_free(sys_sem_t *sem)
 {
 	u8_t     ucErr;
@@ -323,14 +300,25 @@ int sys_sem_valid(sys_sem_t *sem)
 	return (OSSemQuery(*sem, &sem_data) == OS_NO_ERR) ? 1 : 0;
 }
 
-/** Set a semaphore invalid so that sys_sem_valid returns 0 */
+/* Set a semaphore invalid so that sys_sem_valid returns 0 */
 void sys_sem_set_invalid(sys_sem_t *sem)
 {
 }
 
-/*-----------------------------------------------------------------------------------*/
-/*            memory interface                                                       */
-/*-----------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
+/*            memory interface                                                */
+/*----------------------------------------------------------------------------*/
+#if 0
+typedef struct mem_leaks {
+	void *location;
+	INT32U size;
+	struct mem_leaks *next;
+} MEM_LEAKS;
+
+struct mem_leaks *MemoryLeaks = NULL;
+int       MaxUserMemory  = 0;
+int       CurrUserMemory = 0;
+
 /**
  * Allocate memory: determine the smallest pool that is big enough
  * to contain an element of 'size' and get an element from that pool.
@@ -463,24 +451,21 @@ __weak void *mem_trim(void *rmem, mem_size_t newsize)
 	OS_EXIT_CRITICAL();
 	return (void *)p;
 }
+#endif
 
-/*
- * Initialize sys arch
- */
+/* Initialize sys arch */
 void sys_init(void)
 {
 	u8_t ucErr;
 	memset(LwIP_task_priopity_stask, 0, sizeof(LwIP_task_priopity_stask));
 	/* init mem used by sys_mbox_t, use ucosII functions */
 	pQueueMem = OSMemCreate((void *)pcQueueMemoryPool, MAX_QUEUES, sizeof(TQ_DESCR), &ucErr);
-	OSMemNameSet(pQueueMem, "LWIP mem", &ucErr);
-	LWIP_ASSERT("sys_init: failed OSMemCreate Q", ucErr == OS_NO_ERR);
+	OSMemNameSet(pQueueMem, "LwIP Queue", &ucErr);
+	LWIP_ASSERT("sys_init: failed OSMemCreate Queue", ucErr == OS_NO_ERR);
 	pStackMem = OSMemCreate((void *)LwIP_Task_Stk, LWIP_TASK_MAX, LWIP_STK_SIZE * sizeof(OS_STK), &ucErr);
-	OSMemNameSet(pQueueMem, "LWIP TASK STK", &ucErr);
-	LWIP_ASSERT("sys_init: failed OSMemCreate STK", ucErr == OS_NO_ERR);
+	OSMemNameSet(pQueueMem, "LwIP Stack", &ucErr);
+	LWIP_ASSERT("sys_init: failed OSMemCreate Stack", ucErr == OS_NO_ERR);
 }
-
-
 
 /*-----------------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------------*/
@@ -556,7 +541,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 #endif
 	OSTaskNameSet(ubPrio, (u8_t *)name, &ucErr);
 
-	return ubPrio;
+	return task_id;
 }
 
 /**

@@ -93,9 +93,6 @@ extern u32_t          G_IPnetDefNM;
 extern int            G_IPnetStatic;
 extern volatile u32_t G_IPnetTime;
 
-#define N_PRINTF	printf		// Console print for LwIP(net)
-#define N_PUTS		puts
-
 #ifdef __cplusplus
 }
 #endif

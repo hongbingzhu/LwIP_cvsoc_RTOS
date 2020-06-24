@@ -42,6 +42,10 @@
 #include "os.h"
 #include "bsp_int.h"
 
+/* Switch between OS mode and Standalone:
+ * 1. Change NO_SYS in "lwipopts.h"
+ * 2. Change Source file in Makefile (under ports/CycloneV)
+ */
 /* ------------------------------------------------ */
 
 #define BAUDRATE	ALT_16550_BAUDRATE_115200		/* Serial port baud rate						*/
@@ -135,15 +139,15 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 /* ------------------------------------------------ */
 /* UART prompt and key pressed check				*/
 
-	N_PRINTF("\n  Standalone Demo  \n");
-	N_PRINTF("  lwIP  Webserver   \n");
-	N_PRINTF("\nDefaults settings:\n");
-	N_PRINTF("IP address : "); PrintIPv4Addr(G_IPnetDefIP); N_PRINTF("\n");
-	N_PRINTF("Net Mask   : "); PrintIPv4Addr(G_IPnetDefNM); N_PRINTF("\n");
-	N_PRINTF("Gateway    : "); PrintIPv4Addr(G_IPnetDefGW); N_PRINTF("\n");
-	N_PRINTF("\n");
-	N_PRINTF("DHCP will start in 5s.\n");
-	N_PRINTF("Type any key use static IP address\n");
+	printf("\n  Standalone Demo  \n");
+	printf("  lwIP  Webserver   \n");
+	printf("\nDefaults settings:\n");
+	printf("IP address : "); PrintIPv4Addr(G_IPnetDefIP); printf("\n");
+	printf("Net Mask   : "); PrintIPv4Addr(G_IPnetDefNM); printf("\n");
+	printf("Gateway    : "); PrintIPv4Addr(G_IPnetDefGW); printf("\n");
+	printf("\n");
+	printf("DHCP will start in 5s.\n");
+	printf("Type any key use static IP address\n");
 
 	WaitTime = G_IPnetTime;
 	LastWait = -1;
@@ -151,13 +155,13 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 		ii = G_IPnetTime-WaitTime;
 		if (LastWait != (5999-ii)/1000) {
 			LastWait = (5999-ii)/1000;
-			N_PRINTF("\r\r\r\r%d s", LastWait);
+			printf("\r\r\r\r%d s", LastWait);
 		}
 		G_IPnetStatic = GetKey();					/* Check if user pressed a key					*/
 	} while((ii < 5000)								/* Check for 5 seconds							*/
 	  &&    (G_IPnetStatic == 0));					/* Or until a key is pressed					*/
 
-	N_PRINTF("\r\r\r   \r\r\r\n");					/* Erase the remaining time from UART screen	*/
+	printf("\r\r\r   \r\r\r\n");					/* Erase the remaining time from UART screen	*/
 
 /* ------------------------------------------------ */
 /* lwIP initialization								*/
@@ -168,7 +172,7 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
     httpd_ssi_init();
 	httpd_cgi_init();
 
-	N_PUTS("The webserver is ready");
+	puts("The webserver is ready");
 
 /* ------------------------------------------------ */
 /* Processing loop									*/

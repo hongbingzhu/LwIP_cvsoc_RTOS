@@ -90,7 +90,6 @@ struct ip_addr GateWay;
 	DHCPtimeFine    = 0;
 	TCPTimer        = 0;
 
-	sys_init();
 	mem_init();										/* Init dynamic memory (size is MEM_SIZE)		*/
 	memp_init();									/* Init the mempry pools (number is MEMP_NUM_x)	*/
 
@@ -104,9 +103,9 @@ struct ip_addr GateWay;
 		NetMask.addr = G_IPnetDefNM;
 		GateWay.addr = G_IPnetDefGW;
 
-		N_PRINTF("Static IP address : "); PrintIPv4Addr(G_IPnetDefIP);
-		N_PUTS("\n\nThe webserver is ready");
-		N_PUTS("\n\nThe Ethernet interface is ready");
+		printf("Static IP address : "); PrintIPv4Addr(G_IPnetDefIP);
+		puts("\n\nThe webserver is ready");
+		puts("\n\nThe Ethernet interface is ready");
 
 		GPIO_SET(LED_0, 0);							/* Turn ON LED #0								*/
 	}
@@ -178,10 +177,10 @@ static int     Toggle = 0;
 		case DHCP_WAIT_ADDRESS:
 			GPIO_SET(LED_0, Toggle);
 			if (Toggle == 0) {						/* Blink the "waiting for DHCP" message			*/
-				N_PRINTF("Waiting for DHCP server\r");
+				printf("Waiting for DHCP server\r");
 			}
 			else {
-				N_PRINTF("                       \r");
+				printf("                       \r");
 			}
 			Toggle = (Toggle+1) & 1;
 
@@ -190,8 +189,8 @@ static int     Toggle = 0;
 				DHCPstate = DHCP_GOT_ADDRESS;		/* gave us our address							*/
 				dhcp_stop(&g_NetIF);				/* We can stop the DCHP client					*/
 
-				N_PRINTF("Dynamic IP address : "); PrintIPv4Addr(DynamicIP);
-				N_PUTS("\n\nThe Ethernet interface is ready");
+				printf("Dynamic IP address : "); PrintIPv4Addr(DynamicIP);
+				puts("\n\nThe Ethernet interface is ready");
 				GPIO_SET(LED_0, 0);				/* Keep LED #0 ON								*/
 				DHCPstate = DHCP_DONE;
 			}
@@ -206,9 +205,9 @@ static int     Toggle = 0;
 
 					netif_set_addr(&g_NetIF, &IPaddr , &NetMask, &GateWay);
 
-					N_PRINTF("\nDHCP timeout, fallback to static address : %d.%d.%d.%d\n",
+					printf("\nDHCP timeout, fallback to static address : %d.%d.%d.%d\n",
 					                        IP_ADDR0 ,IP_ADDR1 , IP_ADDR2 , IP_ADDR3);
-					N_PUTS("\n\nThe Ethernet interface is ready");
+					puts("\n\nThe Ethernet interface is ready");
 					GPIO_SET(LED_0, 0);				/* Keep LED #0 ON								*/
 					dhcp_stop(&g_NetIF);			/* After stop, we can ask again for an address	*/
 
@@ -235,9 +234,9 @@ u8_t *Baddr;
 
 	Baddr = (u8_t *)&Addr;
   #if BYTE_ORDER == BIG_ENDIAN
-	N_PRINTF("%d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
+	printf("%d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
   #else
-	N_PRINTF("%d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
+	printf("%d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
   #endif
 	return;
 }

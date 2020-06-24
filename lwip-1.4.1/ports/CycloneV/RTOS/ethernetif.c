@@ -100,7 +100,7 @@ void GetMACaddr(u8_t MACaddr[NETIF_MAX_HWADDR_LEN]);
 static void low_level_init(struct netif *netif)
 {
 #ifdef CHECKSUM_BY_HARDWARE
-  int ii; 
+  int ii;
 #endif
 
 	netif->hwaddr_len = ETHARP_HWADDR_LEN;		/* Set the netif MAC hardware address length		*/
@@ -251,8 +251,8 @@ volatile ETH_DMADESCTypeDef *DMARxNextDesc;
 
 /*--------------------------------------------------------------------------------------------------*/
 /**
- * This function is the ethernetif_input task, it is processed when a packet 
- * is ready to be read from the interface. It uses the function low_level_input() 
+ * This function is the ethernetif_input task, it is processed when a packet
+ * is ready to be read from the interface. It uses the function low_level_input()
  * that should handle the actual reception of bytes from the network
  * interface. Then the type of the received packet is determined and
  * the appropriate input function is called.
@@ -267,7 +267,7 @@ struct pbuf *p;
 	for(;;) {
 		sys_arch_sem_wait(&EthRXsem, 0);		/* Wait for the ISR to deliver a buffer				*/
 		p = low_level_input(s_pxNetIf);			/* Process the input buffer							*/
-		puts(">");
+		fputc('>', stdout);
 		if (p != (struct pbuf *)NULL) {			/* OK, we got a valid buffer						*/
 			if (ERR_OK != s_pxNetIf->input(p, s_pxNetIf)) {
 				pbuf_free(p);
@@ -301,6 +301,11 @@ err_t ethernetif_init(struct netif *netif)
 	netif->output     = etharp_output;
 	netif->linkoutput = low_level_output;
 
+#if !NO_SYS
+	extern void sys_init(void);
+	sys_init();
+#endif
+
 	low_level_init(netif);						/* Initialize the hardware							*/
 
 	etharp_init();
@@ -333,7 +338,7 @@ void Emac0_IRQHandler(u32_t cpu_id)
 	else {										/* Not a link status change							*/
 		if (EMAC_DMA_STATUS & DMA_STATUS_RI) {	/* Was a new frame received ?						*/
 			sys_sem_signal(&EthRXsem);			/* Post the semaphore ethernetif_input() blocks on	*/
-			puts("*");
+			fputc('*', stdout);
 		}
 		EMAC_DMAclearPendIT(DMA_STATUS_RI|DMA_STATUS_NIS);	/* Clear RX & Normal interrupt flags	*/
 	}
