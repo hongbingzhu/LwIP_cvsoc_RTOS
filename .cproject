@@ -35,9 +35,6 @@
 							<tool id="com.arm.tool.librarian.1832550541" name="ARM Librarian 5" superClass="com.arm.tool.librarian.240329460"/>
 						</toolChain>
 					</folderInfo>
-					<sourceEntries>
-						<entry excluding="lwip-1.4.1/ports/Abassi|lwip-1.4.1/ports/old|lwip-1.4.1/ports/STM32F2x7|lwip-1.4.1/ports/unix|lwip-1.4.1/ports/win32|OS/uC-Common/KAL/uCOS-III|OS/uC-CPU/ARM-Cortex-A/CCS|OS/uC-CPU/ARM-Cortex-A/GNU|OS/uC-CPU/ARM-Cortex-A/IAR|OS/uC-CPU/Cache/ARM/armv5_generic_l1|OS/uC-CPU/Cache/ARM/armv7_generic_l1|OS/uC-CPU/Cache/ARM/armv7_generic_l1_l2c310_l2/GNU|OS/uC-CPU/Cache/ARM/armv7_generic_l1_l2c310_l2/IAR|OS/uC-CPU/Cache/Freescale|OS/uC-CPU/Cache/NiosII|OS/uCOS-II/Cfg|OS/uCOS-II/Ports/ARM-Cortex-A/Generic/CCS|OS/uCOS-II/Ports/ARM-Cortex-A/Generic/GNU|OS/uCOS-II/Ports/ARM-Cortex-A/Generic/IAR|OS/uCOS-II/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_a_vfp-d16.s|OS/uCOS-II/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_a_vfp-none.s|OS/uCOS-III" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
