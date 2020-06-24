@@ -80,10 +80,10 @@ OS_OBJS := $(OS_SRCS:.c=.o)
 LWIP_DIR := lwip-1.4.1
 
 LWIP_INCS := $(LWIP_DIR)/src/include $(LWIP_DIR)/src/include/ipv4 $(PUB_INCS) \
-	$(LWIP_DIR)/ports/CycloneV $(LWIP_DIR)/ports/CycloneV/Standalone \
-	$(ALT_LIB)/include $(ALT_LIB)/include/socal
+	$(LWIP_DIR)/ports/CycloneV $(ALT_LIB)/include $(ALT_LIB)/include/socal \
+	$(OS_INCS)
 
-LWIP_CORE_OBJS := def.o dhcp.o init.o mem.o memp.o netif.o pbuf.o raw.o stats.o sys.o \
+LWIP_CORE_OBJS := def.o dhcp.o init.o mem.o memp.o netif.o pbuf.o raw.o stats.o \
 	tcp.o tcp_in.o tcp_out.o timers.o udp.o
 LWIP_CORE_OBJS := $(addprefix $(LWIP_DIR)/src/core/,$(LWIP_CORE_OBJS))
 
@@ -98,14 +98,19 @@ LWIP_PORT_OBJS := $(LWIP_DIR)/src/netif/etharp.o
 LWIP_OBJS := $(LWIP_CORE_OBJS) $(LWIP_IPV4_OBJS) $(LWIP_API_OBJS) $(LWIP_PORT_OBJS)
 
 # application objects
-APP_INCS := APP BSP BSP/OS $(OS_INCS) $(LWIP_INCS)
+APP_INCS := APP BSP BSP/OS $(LWIP_INCS)
+#APP_INCS += $(LWIP_DIR)/ports/CycloneV/Standalone
+APP_INCS += $(LWIP_DIR)/ports/CycloneV/RTOS
 
 ALT_SRCS := $(addprefix APP/,alt_16550_uart.c alt_clock_manager.c alt_generalpurpose_io.c)
 APP_SRCS := $(addprefix BSP/,OS/bsp_os.c bsp_int.c bsp.c cpu_bsp.c)
 ASM_SRCS += $(addprefix BSP/ARM_Compiler/,armv7a_tthelp.s bsp_cache.s startup.s)
 APP_SRCS += $(addprefix APP/,app.c alt_eth_dma.c alt_ethernet.c \
 	fs.c httpd_cgi_ssi.c httpd.c httpserver.c NetAddr.c)
-APP_SRCS += $(ALT_SRCS) $(LWIP_DIR)/ports/CycloneV/Standalone/ethernetif.c
+APP_SRCS += $(ALT_SRCS)
+#APP_SRCS += $(LWIP_DIR)/ports/CycloneV/Standalone/ethernetif.c
+APP_SRCS += $(LWIP_DIR)/ports/CycloneV/RTOS/ethernetif.c
+APP_SRCS += $(LWIP_DIR)/ports/uCOS-II/sys_arch.c
 APP_OBJS := $(APP_SRCS:.c=.o)
 APP_MIN_OBJS := $(addprefix BSP/,OS/bsp_os.o bsp_int.o bsp.o cpu_bsp.o) APP/app.o
 
@@ -145,7 +150,8 @@ $(OS_OBJS): %.o: %.c
 $(LWIP_OBJS): %.o: %.c
 	@echo Compiling lwip source $<
 	@$(CC) $(LWIP_INCS:%=-I%) -IAPP $(CFLAGS) --depend=$(subst .o,.d,$@) -c -o $@ $<
-	
+
+# -E: Executes the preprocessor step only.
 $(APP_OBJS): %.o: %.c
 	@echo Compiling application source $<
 	@$(CC) $(APP_INCS:%=-I%) $(CFLAGS) --depend=$(subst .o,.d,$@) -c -o $@ $<

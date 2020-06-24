@@ -44,6 +44,16 @@
 #ifndef  __APP_CFG_H__
 #define  __APP_CFG_H__
 
+#define OS_WATCH_DOG_TASK_PRIO		2
+#define OS_WATCH_DOG_TASK_ID		2
+#define WATCH_DOG_TASK_STACK_SIZE	1024u
 
+#define OS_APP_TASK_START_PRIO		5
+#define OS_APP_TASK_START_ID		5
+#define APP_START_TASK_STACK_SIZE	4096u
+
+#define LWIP_TSK_PRIO				10
+#define LWIP_TSK_ID					10
+#define LWIP_STK_SIZE				4096u
 
 #endif /* __APP_CFG_H__ */

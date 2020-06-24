@@ -9,11 +9,12 @@
 #endif
 
 err_t ethernetif_init(struct netif *netif);
+void  ethernetif_input(void *Arg);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif 
+#endif
 
 /* EOF */

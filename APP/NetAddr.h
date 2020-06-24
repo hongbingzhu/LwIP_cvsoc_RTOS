@@ -81,11 +81,10 @@
 void httpd_ssi_init(void);
 void httpd_cgi_init(void);
 void LwIP_Init(void);
-void lwIPpacket(void);
-void lwIPperiodic(volatile u32_t localtime);
+void LwIP_Packet(void);
+void LwIP_Periodic(volatile u32_t localtime);
 
-void Delay(u32_t nCount);
-void PrtAddr(u32_t);
+void PrintIPv4Addr(u32_t);
 void Time_Update(void);
 
 extern u32_t          G_IPnetDefGW;
@@ -94,6 +93,8 @@ extern u32_t          G_IPnetDefNM;
 extern int            G_IPnetStatic;
 extern volatile u32_t G_IPnetTime;
 
+#define N_PRINTF	printf		// Console print for LwIP(net)
+#define N_PUTS		puts
 
 #ifdef __cplusplus
 }

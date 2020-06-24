@@ -23,8 +23,7 @@
 
 
 #include "httpd.h"
-#include "NetAddr.h"
-#include "WebServer.h"
+#include "WebServer.h"	// hardware interface, LED, etc...
 #include <string.h>
 #include <stdlib.h>
 

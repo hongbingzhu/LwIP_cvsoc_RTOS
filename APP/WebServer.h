@@ -27,6 +27,8 @@
 #ifndef __WEBSERVER_H__
 #define __WEBSERVER_H__
 
+/* hornby, web server's hardware interface definition */
+
 #include <string.h>
 #include "lwip/def.h"
 #include "lwip/opt.h"
@@ -59,6 +61,10 @@
   #define LWIP_HTTP_MAX_SSI				64			/* Maximum number of SSI update functions		*/
 #endif
 
+#if 1
+#define GPIO_DIR(Port,Dir)		// BYHX, define to NULL
+#define GPIO_SET(Port,Val)		// BYHX, define to NULL
+#else
 #define GPIO_DIR(Port,Dir)	alt_gpio_port_datadir_set(alt_gpio_bit_to_pid(Port), 					\
                                                       1<<alt_gpio_bit_to_port_pin(Port),			\
 							                          ((Dir)==0)?0:1<<alt_gpio_bit_to_port_pin(Port))
@@ -67,6 +73,7 @@
                                                       1<<alt_gpio_bit_to_port_pin(Port),			\
 							                          ((Val)==0)?0:1<<alt_gpio_bit_to_port_pin(Port))
 #define SW_GET(Switch)		alt_gpio_port_data_read  (2, 1<<Switch)
+#endif
 
 #define LED_0	ALT_GPIO_1BIT_44
 #define LED_1	ALT_GPIO_1BIT_43

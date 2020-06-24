@@ -113,6 +113,7 @@ void BSP_OS_TmrTickInit(CPU_INT32U tick_rate)
 
     ARM_PTMR_REG_PTISR = 0x01u;
 
+    // Each Cortex-A9 processor has its own private timers that can generate interrupts, using ID29
     BSP_IntVectSet (29u,
                     0u,
                     DEF_BIT_00,

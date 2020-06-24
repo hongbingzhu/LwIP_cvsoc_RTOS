@@ -42,7 +42,7 @@ uint16_t 	u16_phy_regs[40];
 
 void alt_eth_delay(volatile uint32_t delay)
 {
-  volatile uint32_t index = 0; 
+  volatile uint32_t index = 0;
   for(index = delay; index != 0; index--);
 }
 
@@ -62,58 +62,61 @@ void dump_phy_regs(uint16_t phy_address)
    u16_phy_regs[39] = alt_eth_read_phy_register_extended(phy_address, 0x107);
 }
 
-/******************************************************************************/                             
+/******************************************************************************/
 /*                           Global ETH PHY functions                         */
 /******************************************************************************/
 int16_t	alt_eth_find_phy(void)
 {
-	volatile int 		phy_addr = 0;
-	volatile uint16_t ctrl, oldctrl;
+   volatile int 		phy_addr = 0;
+   volatile uint16_t ctrl, oldctrl;
 
-	do 
+   do
    {
       ctrl = alt_eth_read_phy_register(phy_addr, PHY_BCR);
       oldctrl = ctrl & PHY_AutoNegotiation;
-   
+
       ctrl ^= PHY_AutoNegotiation;
       alt_eth_write_phy_register(phy_addr, PHY_BCR, ctrl);
       ctrl = alt_eth_read_phy_register(phy_addr, PHY_BCR);
       ctrl &= PHY_AutoNegotiation;
-   
-      if (ctrl == oldctrl) 
+
+      if (ctrl == oldctrl)
       {
          phy_addr++;
-      } else 
+      } else
       {
          ctrl ^= PHY_AutoNegotiation;
          alt_eth_write_phy_register(phy_addr, PHY_BCR, ctrl);
-   
-         return phy_addr;
-		}
-	} while (phy_addr < 32);
 
-	return ALT_E_ERROR;
+         return phy_addr;
+      }
+   } while (phy_addr < 32);
+
+   return ALT_E_ERROR;
 }
 
 
 
 ALT_STATUS_CODE alt_eth_phy_config(uint16_t phy_address)
 {
-	uint16_t utemp1, utemp2, utemp3;
-	
-    /*--------------------   Configure the PHY   ----------------*/
-	alt_eth_write_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_RX_DATA_SKEW,0);
-	alt_eth_write_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_TX_DATA_SKEW,0);
-	alt_eth_write_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_CLOCK_SKEW,0xA0D0);
-	
-	utemp1 = alt_eth_read_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_RX_DATA_SKEW);
-	utemp2 = alt_eth_read_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_TX_DATA_SKEW);
-	utemp3 = alt_eth_read_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_CLOCK_SKEW);
-	
-	/* Configure the PHY for AutoNegotiate*/
-	alt_eth_write_phy_register(phy_address, PHY_AUTON, 0x1E1);
-	alt_eth_write_phy_register(phy_address, PHY_BCR, 0x1200);
-   
+   uint16_t utemp1 __attribute__((unused));
+   uint16_t utemp2 __attribute__((unused));
+   uint16_t utemp3 __attribute__((unused));
+
+   /*--------------------   Configure the PHY   ----------------*/
+   alt_eth_write_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_RX_DATA_SKEW,0);
+   alt_eth_write_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_TX_DATA_SKEW,0);
+   alt_eth_write_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_CLOCK_SKEW,0xA0D0);
+
+   utemp1 = alt_eth_read_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_RX_DATA_SKEW);
+   utemp2 = alt_eth_read_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_TX_DATA_SKEW);
+   utemp3 = alt_eth_read_phy_register_extended(phy_address, MII_KSZ9021_EXT_RGMII_CLOCK_SKEW);
+
+   /* Configure the PHY for AutoNegotiate*/
+   alt_eth_write_phy_register(phy_address, PHY_AUTON, 0x1E1);
+   alt_eth_write_phy_register(phy_address, PHY_BCR, 0x1200);
+
+   return ALT_E_SUCCESS;
 }
 
 
@@ -128,7 +131,7 @@ ALT_STATUS_CODE alt_eth_phy_reset(uint16_t phy_address)
       /* Return ERROR in case of write timeout */
       return ALT_E_ERROR;
    }
-   
+
    /* Wait for the reset to clear */
    for (i=0; i<10; i++)
    {
@@ -142,51 +145,51 @@ ALT_STATUS_CODE alt_eth_phy_reset(uint16_t phy_address)
 
    /* Delay to assure PHY reset */
    alt_eth_delay(PHY_RESET_DELAY);
-   
+
    return ALT_E_SUCCESS;
-}	
+}
 
 
 
-/******************************************************************************/                             
+/******************************************************************************/
 /*                           Global ETH MAC/DMA functions                     */
 /******************************************************************************/
 
 
 ALT_STATUS_CODE alt_eth_reset_mac(void)
 {
-	/*-------------------- Reset the EMAC and set the PHY mode  ----------------*/
+   /*-------------------- Reset the EMAC and set the PHY mode  ----------------*/
 
    /* Reset the EMAC */
    alt_setbits_word(ALT_RSTMGR_PERMODRST_ADDR,
                    ALT_RSTMGR_PERMODRST_EMAC_SET(ALT_RSTMGR_PERMODRST_EMAC_RESET));
-   
+
    /* Clear out the previous value and update these to RGMII */
    alt_clrbits_word(ALT_SYSMGR_EMAC_CTL_ADDR,  0x0F);
-   alt_setbits_word(ALT_SYSMGR_EMAC_CTL_ADDR,  
+   alt_setbits_word(ALT_SYSMGR_EMAC_CTL_ADDR,
                    ALT_SYSMGR_EMAC_CTL_PHYSEL_0_SET(ALT_SYSMGR_EMAC_CTL_PHYSEL_0_E_RGMII) |
                    ALT_SYSMGR_EMAC_CTL_PHYSEL_1_SET(ALT_SYSMGR_EMAC_CTL_PHYSEL_1_E_RGMII) );
    /* Remove the reset. */
    alt_clrbits_word(ALT_RSTMGR_PERMODRST_ADDR,
                    ALT_RSTMGR_PERMODRST_EMAC_SET(ALT_RSTMGR_PERMODRST_EMAC_RESET));
-   
+
    /* Delay to assure PHY reset */
    alt_eth_delay(PHY_RESET_DELAY);
-   
+
    return ALT_E_SUCCESS;
-}   
+}
 
 
 
 
 ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
 {
-  uint32_t reg_value = 0, tmpreg = 0, tmpreg2;
+  uint32_t reg_value = 0, tmpreg = 0;
   volatile uint32_t alt_mac_config_reg_settings = 0;
   volatile uint32_t timeout = 0;
 
-   
-  /*-------------------------------- MAC Config ------------------------------*/   
+
+  /*-------------------------------- MAC Config ------------------------------*/
   /*-------------------- Reset the EMAC and set the PHY mode  ----------------*/
    /* Reset the entire Ethernet */
    alt_eth_software_reset();
@@ -199,16 +202,16 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
    //tmpreg = alt_eth_find_phy();
 
    alt_eth_phy_reset(phy_address);
-  
+
    /*-------------------- PHY read and check     ----------------*/
    /* Check the PHY Identifier */
    reg_value = alt_eth_read_phy_register(phy_address, 2);
    tmpreg = alt_eth_read_phy_register(phy_address, 3);
    if ((reg_value != 0x22) && ((tmpreg & 0xFFF0) != 0x1610)) while (1);
- 
+
    /*--------------------   Configure the PHY   ----------------*/
    alt_eth_phy_config(phy_address);
-  
+
    /*--------------------   Configure the MAC   ----------------*/
    alt_mac_config_reg_settings = (ALT_EMAC_GMAC_MAC_CFG_IPC_SET_MSK |  /* Checksum Offload */
                                   ALT_EMAC_GMAC_MAC_CFG_JD_SET_MSK  |  /* Jabber Disable */
@@ -219,7 +222,7 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
 
 #ifdef ALT_ETH_SET_EMAC_RATE
     if(alt_eth_write_phy_register(phy_address, PHY_BCR, ((uint16_t)ALT_ETH_SET_EMAC_MODE |
-                                                          (uint16_t)ALT_ETH_SET_EMAC_SPEED )) 
+                                                          (uint16_t)ALT_ETH_SET_EMAC_SPEED ))
                                           != ALT_E_SUCCESS)
     {
       /* Return ERROR in case of write timeout */
@@ -230,7 +233,7 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
 
 #else    //#ifdef ALT_ETH_SET_EMAC_RATE
    /* Determine the correct PHY settings if we are AutoNegotiating */
- 
+
    /* First wait for linked status... */
    /* Reset Timeout counter */
    timeout = 0;
@@ -238,7 +241,7 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
    {
       timeout++;
    } while (!(alt_eth_read_phy_register(phy_address, PHY_BSR) & PHY_Linked_Status) && (timeout < PHY_READ_TO));
-   
+
    /* Return ERROR in case of timeout */
    if(timeout == PHY_READ_TO)
    {
@@ -246,7 +249,7 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
    }
 
    /* Reset Timeout counter */
-   timeout = 0; 
+   timeout = 0;
    /* Enable Auto-Negotiation */
    if((alt_eth_write_phy_register(phy_address, PHY_BCR, PHY_AutoNegotiation)) != ALT_E_SUCCESS)
    {
@@ -258,43 +261,43 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
    do
    {
       timeout++;
-   } while (!(alt_eth_read_phy_register(phy_address, PHY_BSR) & PHY_AutoNego_Complete) && (timeout < (uint32_t)PHY_READ_TO));  
-   
+   } while (!(alt_eth_read_phy_register(phy_address, PHY_BSR) & PHY_AutoNego_Complete) && (timeout < (uint32_t)PHY_READ_TO));
+
    /* Return ERROR in case of timeout */
    if(timeout == PHY_READ_TO)
    {
       return ALT_E_ERROR;
    }
-   
+
    /* Reset Timeout counter */
    timeout = 0;
-   
+
    /* Read the result of the auto-negotiation */
    reg_value = alt_eth_read_phy_register(phy_address, PHY_SR);
-   
+
    /* Configure the MAC with the Duplex Mode fixed by the auto-negotiation process */
    if((reg_value & PHY_DUPLEX_STATUS) != (uint32_t)RESET)
    {
       /* Set Ethernet duplex mode to Full-duplex following the auto-negotiation */
-      alt_mac_config_reg_settings |= ALT_EMAC_GMAC_MAC_CFG_DM_SET_MSK;  
+      alt_mac_config_reg_settings |= ALT_EMAC_GMAC_MAC_CFG_DM_SET_MSK;
    }
-      
+
    /* Configure the MAC with the speed fixed by the auto-negotiation process */
    if ((reg_value & PHY_SPEED_MASK) == PHY_SPEED_100)
    {
-      /* Set Ethernet speed to 100M following the auto-negotiation */ 
-      alt_mac_config_reg_settings |= ALT_EMAC_GMAC_MAC_CFG_FES_SET_MSK;      
+      /* Set Ethernet speed to 100M following the auto-negotiation */
+      alt_mac_config_reg_settings |= ALT_EMAC_GMAC_MAC_CFG_FES_SET_MSK;
    } else if ((reg_value & PHY_SPEED_MASK) > PHY_SPEED_100)
    {
-      /* Set Ethernet speed to 1G following the auto-negotiation */ 
-      alt_mac_config_reg_settings &= ALT_EMAC_GMAC_MAC_CFG_PS_CLR_MSK;     
-   } 
-    
+      /* Set Ethernet speed to 1G following the auto-negotiation */
+      alt_mac_config_reg_settings &= ALT_EMAC_GMAC_MAC_CFG_PS_CLR_MSK;
+   }
+
    /* dump_phy_regs(phy_address);       */
 
 #endif      //#ifdef ALT_ETH_SET_EMAC_RATE
 
-  
+
    /*------------------------    ETHERNET MAC Config   -----------------------*/
    /*----------------------- ETHERNET MACIM Configuration --------------------*/
    /* Read the SMII Status Register to clear the SMII changed flag */
@@ -305,13 +308,13 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
 
   /*------------------------ ETHERNET MACCR Configuration --------------------*/
    /* Set the MAC Configureation Register */
-   alt_write_word(ALT_EMAC_GMAC(MAC_CFG_ADDR), alt_mac_config_reg_settings);  
+   alt_write_word(ALT_EMAC_GMAC(MAC_CFG_ADDR), alt_mac_config_reg_settings);
 
   /*-------------------------------- DMA Config ------------------------------*/
   /*----------------------- ETHERNET DMABM Configuration --------------------*/
 
    /* Set the DMA Bus Mode Register */
-   alt_write_word(ALT_EMAC_DMA(BUS_MOD_ADDR),  (ALT_EMAC_DMA_BUS_MOD_USP_SET_MSK   | /* Use separate PBL */ 
+   alt_write_word(ALT_EMAC_DMA(BUS_MOD_ADDR),  (ALT_EMAC_DMA_BUS_MOD_USP_SET_MSK   | /* Use separate PBL */
                                                 ALT_EMAC_DMA_BUS_MOD_AAL_SET_MSK   | /* Address Aligned Beats */
 #ifdef USE_ENHANCED_DMA_DESCRIPTORS
                                                 ALT_EMAC_DMA_BUS_MOD_ATDS_SET_MSK  | /* Alternate Descriptor Size */
@@ -322,7 +325,7 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
 
    /*----------------------- ETHERNET DMAOMR Configuration --------------------*/
    /* Set the DMA Operation Mode Register */
-   alt_write_word(ALT_EMAC_DMA(OP_MOD_ADDR),   (ALT_EMAC_DMA_OP_MOD_OSF_SET_MSK    | /* Operate on Second Frame */ 
+   alt_write_word(ALT_EMAC_DMA(OP_MOD_ADDR),   (ALT_EMAC_DMA_OP_MOD_OSF_SET_MSK    | /* Operate on Second Frame */
                                                 ALT_EMAC_DMA_OP_MOD_TSF_SET_MSK    | /* Transmit Store and Forward */
                                                 ALT_EMAC_DMA_OP_MOD_RSF_SET_MSK  )); /* Receive Store and Forward */
 
@@ -339,19 +342,19 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
 
 void alt_eth_start(void)
 {
-  /* Enable transmit state machine of the MAC for transmission on the MII */  
+  /* Enable transmit state machine of the MAC for transmission on the MII */
   alt_eth_mac_tx_en(ENABLE);
   /* Flush Transmit FIFO */
   alt_eth_dma_flush_tx_fifo();
-  /* Enable receive state machine of the MAC for reception from the MII */  
+  /* Enable receive state machine of the MAC for reception from the MII */
   alt_eth_mac_rx_en(ENABLE);
- 
+
   /* Start DMA transmission */
-  alt_eth_dma_tx_en(ENABLE); 
+  alt_eth_dma_tx_en(ENABLE);
   /* Start DMA reception */
-  alt_eth_dma_rx_en(ENABLE); 
-  
-  alt_eth_delay(PHY_RESET_DELAY);  
+  alt_eth_dma_rx_en(ENABLE);
+
+  alt_eth_delay(PHY_RESET_DELAY);
 }
 
 
@@ -359,42 +362,42 @@ void alt_eth_start(void)
 
 void alt_eth_stop(void)
 {
-	
+
   /* Stop DMA transmission */
-  alt_eth_dma_tx_en(DISABLE); 
+  alt_eth_dma_tx_en(DISABLE);
   /* Stop DMA reception */
   alt_eth_dma_rx_en(DISABLE);
-   
-  /* Disable transmit state machine of the MAC for transmission on the MII */  
+
+  /* Disable transmit state machine of the MAC for transmission on the MII */
   alt_eth_mac_tx_en(DISABLE);
   /* Flush Transmit FIFO */
   alt_eth_dma_flush_tx_fifo();
-  /* Disable receive state machine of the MAC for reception from the MII */  
+  /* Disable receive state machine of the MAC for reception from the MII */
   alt_eth_mac_rx_en(DISABLE);
- 
+
   /* Stop DMA transmission */
-  alt_eth_dma_tx_en(DISABLE); 
+  alt_eth_dma_tx_en(DISABLE);
   /* Stop DMA reception */
-  alt_eth_dma_rx_en(DISABLE); 
-  
-  alt_eth_delay(PHY_RESET_DELAY);  
+  alt_eth_dma_rx_en(DISABLE);
+
+  alt_eth_delay(PHY_RESET_DELAY);
 }
 
 
 
 
 void alt_eth_mac_tx_en(alt_eth_functional_state_t new_state)
-{ 
+{
   if (new_state != DISABLE)
   {
     /* Enable the MAC transmission */
-    alt_setbits_word(ALT_EMAC_GMAC(MAC_CFG_ADDR), 
+    alt_setbits_word(ALT_EMAC_GMAC(MAC_CFG_ADDR),
                      ALT_EMAC_GMAC_MAC_CFG_TE_SET_MSK);
   }
   else
   {
     /* Disable the MAC transmission */
-    alt_clrbits_word(ALT_EMAC_GMAC(MAC_CFG_ADDR), 
+    alt_clrbits_word(ALT_EMAC_GMAC(MAC_CFG_ADDR),
                      ALT_EMAC_GMAC_MAC_CFG_TE_SET_MSK);
 
   }
@@ -404,19 +407,19 @@ void alt_eth_mac_tx_en(alt_eth_functional_state_t new_state)
 
 
 void alt_eth_mac_rx_en(alt_eth_functional_state_t new_state)
-{ 
- 
+{
+
   if (new_state != DISABLE)
   {
-    /* Enable the MAC reception */ 
-    alt_setbits_word(ALT_EMAC_GMAC(MAC_CFG_ADDR), 
+    /* Enable the MAC reception */
+    alt_setbits_word(ALT_EMAC_GMAC(MAC_CFG_ADDR),
                      ALT_EMAC_GMAC_MAC_CFG_RE_SET_MSK);
 
   }
   else
   {
     /* Disable the MAC reception */
-    alt_clrbits_word(ALT_EMAC_GMAC(MAC_CFG_ADDR), 
+    alt_clrbits_word(ALT_EMAC_GMAC(MAC_CFG_ADDR),
                      ALT_EMAC_GMAC_MAC_CFG_RE_SET_MSK);
   }
 }
@@ -440,10 +443,10 @@ alt_eth_flag_status_t alt_eth_mac_get_flow_control_busy_status(void)
 
 
 
-void alt_eth_mac_pause_ctrl_frame(void)  
-{ 
-  /* When Set In full duplex MAC initiates pause control frame */ 
-  alt_setbits_word(ALT_EMAC_GMAC(FLOW_CTL_ADDR), 
+void alt_eth_mac_pause_ctrl_frame(void)
+{
+  /* When Set In full duplex MAC initiates pause control frame */
+  alt_setbits_word(ALT_EMAC_GMAC(FLOW_CTL_ADDR),
                    ALT_EMAC_GMAC_FLOW_CTL_FCA_BPA_SET_MSK);
 
 }
@@ -466,32 +469,32 @@ alt_eth_flag_status_t alt_eth_mac_get_mii_link_status(void)
 
 
 
-void alt_eth_mac_back_pressure_activate(alt_eth_functional_state_t new_state)   
-{ 
-    
+void alt_eth_mac_back_pressure_activate(alt_eth_functional_state_t new_state)
+{
+
   if (new_state != DISABLE)
   {
     /* Activate the MAC BackPressure operation */
     /* In Half duplex: during backpressure, when the MAC receives a new frame,
     the transmitter starts sending a JAM pattern resulting in a collision */
-    alt_setbits_word(ALT_EMAC_GMAC(FLOW_CTL_ADDR), 
+    alt_setbits_word(ALT_EMAC_GMAC(FLOW_CTL_ADDR),
                    ALT_EMAC_GMAC_FLOW_CTL_FCA_BPA_SET_MSK);
 
   }
   else
   {
-    /* Desactivate the MAC BackPressure operation */ 
-    alt_clrbits_word(ALT_EMAC_GMAC(FLOW_CTL_ADDR), 
+    /* Desactivate the MAC BackPressure operation */
+    alt_clrbits_word(ALT_EMAC_GMAC(FLOW_CTL_ADDR),
                    ALT_EMAC_GMAC_FLOW_CTL_FCA_BPA_SET_MSK);
 
-  } 
+  }
 }
 
 
 alt_eth_flag_status_t alt_eth_mac_get_status_flags(uint32_t mac_flag_mask)
 {
   alt_eth_flag_status_t bitstatus = RESET;
-  
+
   if (alt_read_word(ALT_EMAC_GMAC(INT_STAT_ADDR)) & mac_flag_mask)
 
   {
@@ -514,17 +517,17 @@ uint32_t alt_eth_mac_get_irq_status(void)
 
 void alt_eth_mac_set_irq(uint32_t mac_irq_mask, alt_eth_functional_state_t new_state)
 {
-    
+
   if (new_state != DISABLE)
   {
     /* Enable the selected ETHERNET MAC interrupts */
-    alt_clrbits_word(ALT_EMAC_GMAC(INT_MSK_ADDR), 
+    alt_clrbits_word(ALT_EMAC_GMAC(INT_MSK_ADDR),
                    mac_irq_mask);
   }
   else
   {
     /* Disable the selected ETHERNET MAC interrupts */
-    alt_setbits_word(ALT_EMAC_GMAC(INT_MSK_ADDR), 
+    alt_setbits_word(ALT_EMAC_GMAC(INT_MSK_ADDR),
                    mac_irq_mask);
   }
 }
@@ -534,15 +537,15 @@ void alt_eth_mac_set_irq(uint32_t mac_irq_mask, alt_eth_functional_state_t new_s
 void alt_eth_mac_set_mac_addr(uint32_t mac_addr_num, uint8_t *address)
 {
   uint32_t tmpreg;
-    
+
   /* Calculate the selected MAC address high register */
   tmpreg = ((uint32_t)address[5] << 8) | (uint32_t)address[4];
   /* Load the selected MAC address high register */
-  alt_write_word(ALT_EMAC_GMAC(MAC_ADDR0_HIGH_ADDR) + (8*mac_addr_num), 
+  alt_write_word(ALT_EMAC_GMAC(MAC_ADDR0_HIGH_ADDR) + (8*mac_addr_num),
   						tmpreg);
 
   /* Calculate the selected MAC address low register */
-  tmpreg = ((uint32_t)address[3] << 24) | ((uint32_t)address[2] << 16) | 
+  tmpreg = ((uint32_t)address[3] << 24) | ((uint32_t)address[2] << 16) |
   			((uint32_t)address[1] << 8) | address[0];
    /* Load the selected MAC address low register */
   alt_write_word(ALT_EMAC_GMAC(MAC_ADDR0_LOW_ADDR) + (8*mac_addr_num), tmpreg);
@@ -554,7 +557,7 @@ void alt_eth_mac_set_mac_addr(uint32_t mac_addr_num, uint8_t *address)
 void alt_eth_mac_get_mac_addr(uint32_t mac_addr_num, uint8_t *address)
 {
   uint32_t tmpreg;
-    
+
   /* Get the selected MAC address high register */
   tmpreg = alt_read_word(ALT_EMAC_GMAC(MAC_ADDR0_HIGH_ADDR) + (8*mac_addr_num));
    /* Calculate the selected MAC address buffer */
@@ -572,7 +575,7 @@ void alt_eth_mac_get_mac_addr(uint32_t mac_addr_num, uint8_t *address)
 }
 
 
-/******************************************************************************/                             
+/******************************************************************************/
 /*                           DMA Descriptors functions                        */
 /******************************************************************************/
 
@@ -586,14 +589,14 @@ uint32_t alt_eth_dma_get_rx_desc_frame_len(alt_eth_dma_descriptor_t *rx_dma_desc
 
 
 
-/******************************************************************************/                             
+/******************************************************************************/
 /*                           DMA functions                                    */
 /******************************************************************************/
 
 alt_eth_flag_status_t alt_eth_get_software_reset_status(void)
 {
   alt_eth_flag_status_t bitstatus = RESET;
-  
+
   if(ALT_EMAC_DMA_BUS_MOD_SWR_GET(alt_read_word(ALT_EMAC_DMA(BUS_MOD_ADDR))))
   {
     bitstatus = SET;
@@ -612,37 +615,37 @@ ALT_STATUS_CODE alt_eth_software_reset(void)
   int i;
   /* Set the SWR bit: resets all MAC subsystem internal registers and logic */
   /* After reset all the registers holds their respective reset values */
-  alt_setbits_word(ALT_EMAC_DMA(BUS_MOD_ADDR), 
+  alt_setbits_word(ALT_EMAC_DMA(BUS_MOD_ADDR),
                    ALT_EMAC_DMA_BUS_MOD_SWR_SET_MSK);
-                      
-   /* Wait for the software reset to clear */
-   for (i=0; i<10; i++)
-   {
-      alt_eth_delay(PHY_RESET_DELAY);
-      if (alt_eth_get_software_reset_status() == RESET)
-         break;
-   }
 
-   /* Spin here if there is a problem. Want to know quickly */
-   if (i == 10)  while(1);
+  /* Wait for the software reset to clear */
+  for (i=0; i<10; i++)
+  {
+    alt_eth_delay(PHY_RESET_DELAY);
+    if (alt_eth_get_software_reset_status() == RESET)
+      break;
+  }
 
-   return ALT_E_SUCCESS;
+  /* Spin here if there is a problem. Want to know quickly */
+  if (i == 10)  while(1);
+
+  return ALT_E_SUCCESS;
 }
 
 
 
 
 inline uint32_t alt_eth_dma_get_irq_status(void)
-{  
-   return alt_read_word(ALT_EMAC_DMA(STAT_ADDR));
+{
+  return alt_read_word(ALT_EMAC_DMA(STAT_ADDR));
 }
 
 
 
 alt_eth_flag_status_t alt_eth_dma_get_status_flags(uint32_t dma_flag)
-{  
+{
   alt_eth_flag_status_t bitstatus = RESET;
-    
+
   if (alt_read_word(ALT_EMAC_DMA(STAT_ADDR)) & dma_flag)
   {
     bitstatus = SET;
@@ -658,7 +661,7 @@ alt_eth_flag_status_t alt_eth_dma_get_status_flags(uint32_t dma_flag)
 
 inline void alt_eth_dma_clear_status_flag(uint32_t dma_flag)
 {
-  
+
   /* Clear the selected ETHERNET DMA FLAG */
   alt_write_word(ALT_EMAC_DMA(STAT_ADDR), dma_flag);
 }
@@ -667,17 +670,17 @@ inline void alt_eth_dma_clear_status_flag(uint32_t dma_flag)
 
 void alt_eth_dma_set_irq(uint32_t dma_irq_flag, alt_eth_functional_state_t new_state)
 {
-    
+
   if (new_state != DISABLE)
   {
     /* Enable the selected ETHERNET DMA interrupts */
-    alt_setbits_word(ALT_EMAC_DMA(INT_EN_ADDR), 
+    alt_setbits_word(ALT_EMAC_DMA(INT_EN_ADDR),
                      dma_irq_flag);
   }
   else
   {
     /* Disable the selected ETHERNET DMA interrupts */
-    alt_clrbits_word(ALT_EMAC_DMA(INT_EN_ADDR), 
+    alt_clrbits_word(ALT_EMAC_DMA(INT_EN_ADDR),
                      dma_irq_flag);
   }
 }
@@ -685,9 +688,9 @@ void alt_eth_dma_set_irq(uint32_t dma_irq_flag, alt_eth_functional_state_t new_s
 
 
 alt_eth_irq_status_t alt_eth_dma_get_irq(uint32_t dma_irq_flag)
-{  
+{
   alt_eth_irq_status_t bitstatus = RESET;
-  
+
   if (alt_read_word(ALT_EMAC_DMA(STAT_ADDR)) & dma_irq_flag)
   {
     bitstatus = SET;
@@ -702,7 +705,7 @@ alt_eth_irq_status_t alt_eth_dma_get_irq(uint32_t dma_irq_flag)
 
 
 inline void alt_eth_dma_clear_irq_flag(uint32_t dma_irq_flag)
-{  
+{
   /* Clear the selected ETHERNET DMA IT */
   alt_write_word(ALT_EMAC_DMA(STAT_ADDR), dma_irq_flag);
 }
@@ -710,8 +713,8 @@ inline void alt_eth_dma_clear_irq_flag(uint32_t dma_irq_flag)
 /* Clear the Ethernet DMA Rx/Tx IT pending bits */
 void alt_eth_clear_tx_rx_irq_bits(void)
 {
-   alt_eth_dma_clear_irq_flag( ALT_EMAC_DMA_INT_EN_NIE_SET_MSK | 
-                              ALT_EMAC_DMA_INT_EN_RIE_SET_MSK | 
+  alt_eth_dma_clear_irq_flag( ALT_EMAC_DMA_INT_EN_NIE_SET_MSK |
+                              ALT_EMAC_DMA_INT_EN_RIE_SET_MSK |
                               ALT_EMAC_DMA_INT_EN_TIE_SET_MSK);
 }
 
@@ -736,16 +739,16 @@ inline uint32_t alt_eth_dma_get_rx_process_state(void)
 
 inline void alt_eth_dma_flush_tx_fifo(void)
 {
-  /* Set the Flush Transmit FIFO bit */ 
+  /* Set the Flush Transmit FIFO bit */
   alt_setbits_word(ALT_EMAC_DMA(OP_MOD_ADDR), ALT_EMAC_DMA_OP_MOD_FTF_SET_MSK);
 }
 
 
 
 alt_eth_flag_status_t alt_eth_dma_get_tx_fifo_flush_status(void)
-{   
+{
   alt_eth_flag_status_t bitstatus = RESET;
-  
+
   if (ALT_EMAC_DMA_OP_MOD_FTF_GET(alt_read_word(ALT_EMAC_DMA(OP_MOD_ADDR))))
   {
     bitstatus = SET;
@@ -754,25 +757,25 @@ alt_eth_flag_status_t alt_eth_dma_get_tx_fifo_flush_status(void)
   {
     bitstatus = RESET;
   }
-  return bitstatus; 
+  return bitstatus;
 }
 
 
 
 void alt_eth_dma_tx_en(alt_eth_functional_state_t new_state)
-{ 
-   
+{
+
   if (new_state != DISABLE)
   {
     /* Enable the DMA transmission */
-    alt_setbits_word(ALT_EMAC_DMA(OP_MOD_ADDR), 
+    alt_setbits_word(ALT_EMAC_DMA(OP_MOD_ADDR),
                     ALT_EMAC_DMA_OP_MOD_ST_SET_MSK);
 
   }
   else
   {
     /* Disable the DMA transmission */
-    alt_clrbits_word(ALT_EMAC_DMA(OP_MOD_ADDR), 
+    alt_clrbits_word(ALT_EMAC_DMA(OP_MOD_ADDR),
                     ALT_EMAC_DMA_OP_MOD_ST_SET_MSK);
 
   }
@@ -782,19 +785,19 @@ void alt_eth_dma_tx_en(alt_eth_functional_state_t new_state)
 
 
 void alt_eth_dma_rx_en(alt_eth_functional_state_t new_state)
-{ 
-   
+{
+
   if (new_state != DISABLE)
   {
     /* Enable the DMA reception */
-    alt_setbits_word(ALT_EMAC_DMA(OP_MOD_ADDR), 
+    alt_setbits_word(ALT_EMAC_DMA(OP_MOD_ADDR),
                    ALT_EMAC_DMA_OP_MOD_SR_SET_MSK);
 
   }
   else
   {
     /* Disable the DMA reception */
-    alt_clrbits_word(ALT_EMAC_DMA(OP_MOD_ADDR), 
+    alt_clrbits_word(ALT_EMAC_DMA(OP_MOD_ADDR),
                    ALT_EMAC_DMA_OP_MOD_SR_SET_MSK);
 
   }
@@ -806,7 +809,7 @@ void alt_eth_dma_rx_en(alt_eth_functional_state_t new_state)
 alt_eth_flag_status_t alt_eth_dma_get_overflow_status(uint32_t dma_overflow_flag)
 {
    alt_eth_flag_status_t bitstatus = RESET;
-      
+
    if (alt_read_word(ALT_EMAC_DMA(MISSED_FRM_AND_BUF_OVF_CNTR_ADDR)) & dma_overflow_flag)
    {
       bitstatus = SET;
@@ -892,21 +895,21 @@ void alt_eth_dma_set_rx_int_wdt(uint8_t value)
 
 }
 
-/******************************************************************************/                             
+/******************************************************************************/
 /*                                PHY functions                               */
 /******************************************************************************/
 
 uint16_t alt_eth_read_phy_register(uint16_t phy_address, uint16_t phy_reg)
 {
-   volatile uint32_t tmpreg = 0;     
+   volatile uint32_t tmpreg = 0;
    volatile uint32_t timeout = 0;
-        
+
    /* Prepare the MII address register value */
-    tmpreg = 0;
+   tmpreg = 0;
    /* Set the PHY device address */
    tmpreg |= ALT_EMAC_GMAC_GMII_ADDR_PA_SET(phy_address);
    /* Set the PHY register address */
-   tmpreg |= ALT_EMAC_GMAC_GMII_ADDR_GR_SET(phy_reg); 
+   tmpreg |= ALT_EMAC_GMAC_GMII_ADDR_GR_SET(phy_reg);
    /* Set the read mode */
    tmpreg &= ALT_EMAC_GMAC_GMII_ADDR_GW_CLR_MSK;
    /* Set the clock divider */
@@ -927,7 +930,7 @@ uint16_t alt_eth_read_phy_register(uint16_t phy_address, uint16_t phy_reg)
    {
       return (uint16_t)ALT_E_ERROR;
    }
-   
+
    /* Return data register value */
    return alt_read_word(ALT_EMAC_GMAC(GMII_DATA_ADDR));
 
@@ -939,9 +942,9 @@ uint16_t alt_eth_read_phy_register(uint16_t phy_address, uint16_t phy_reg)
 
 ALT_STATUS_CODE alt_eth_write_phy_register(uint16_t phy_address, uint16_t phy_reg, uint16_t phy_value)
 {
-   uint32_t tmpreg = 0;     
+   uint32_t tmpreg = 0;
    volatile uint32_t timeout = 0;
-      
+
    /* Prepare the MII address register value */
    tmpreg = 0;
    /* Set the PHY device address */
@@ -971,21 +974,21 @@ ALT_STATUS_CODE alt_eth_write_phy_register(uint16_t phy_address, uint16_t phy_re
    {
       return ALT_E_ERROR;
    }
-   
+
    /* Return SUCCESS */
-   return ALT_E_SUCCESS;  
+   return ALT_E_SUCCESS;
 }
 
 
 
 ALT_STATUS_CODE alt_eth_write_phy_register_extended(uint16_t phy_address, uint16_t phy_reg, uint16_t phy_value)
 {
-   ALT_STATUS_CODE retcode; 
+    ALT_STATUS_CODE retcode;
     retcode = alt_eth_write_phy_register(phy_address,
-                         MII_KSZ9021_EXTENDED_CTRL, 
+                         MII_KSZ9021_EXTENDED_CTRL,
                          0x8000 | phy_reg);
     retcode |= alt_eth_write_phy_register(phy_address,
-                         MII_KSZ9021_EXTENDED_DATAW, 
+                         MII_KSZ9021_EXTENDED_DATAW,
                          phy_value);
 
     return retcode;
@@ -995,7 +998,7 @@ ALT_STATUS_CODE alt_eth_write_phy_register_extended(uint16_t phy_address, uint16
 
 uint16_t alt_eth_read_phy_register_extended(uint16_t phy_address, uint16_t phy_reg)
 {
-    alt_eth_write_phy_register(phy_address, 
+    alt_eth_write_phy_register(phy_address,
                          MII_KSZ9021_EXTENDED_CTRL,
                          phy_reg);
     return alt_eth_read_phy_register(phy_address,
@@ -1005,17 +1008,17 @@ uint16_t alt_eth_read_phy_register_extended(uint16_t phy_address, uint16_t phy_r
 
 
 
-uint32_t ETH_PHYLoopBackCmd(uint16_t phy_address, alt_eth_functional_state_t new_state)
+ALT_STATUS_CODE ETH_PHYLoopBackCmd(uint16_t phy_address, alt_eth_functional_state_t new_state)
 {
   uint16_t tmpreg = 0;
-      
+
   /* Get the PHY configuration to update it */
-  tmpreg = alt_eth_read_phy_register(phy_address, PHY_BCR); 
-  
+  tmpreg = alt_eth_read_phy_register(phy_address, PHY_BCR);
+
   if (new_state != DISABLE)
   {
     /* Enable the PHY loopback mode */
-    tmpreg |= PHY_Loopback;  
+    tmpreg |= PHY_Loopback;
   }
   else
   {
@@ -1030,29 +1033,29 @@ uint32_t ETH_PHYLoopBackCmd(uint16_t phy_address, alt_eth_functional_state_t new
   else
   {
     /* Return SUCCESS */
-    return ALT_E_ERROR; 
-  }   
-} 
+    return ALT_E_ERROR;
+  }
+}
 
 
 
 
 void alt_eth_dma_mac_config(void)
-{                                        
-   
+{
+
    /* Reset ETHERNET MAC */
    alt_eth_reset_mac();
-   
+
    /* Software reset of DMA block */
    alt_eth_software_reset();
-   
+
    /* Configure Ethernet */
    alt_eth_init(KSZ9021RL_PHY_ADDRESS);
-   
+
    /* Enable the Ethernet Rx Interrupt, TX Interrupt & Normal Int Summary */
-   alt_eth_dma_set_irq(ALT_EMAC_DMA_INT_EN_NIE_SET_MSK | 
-                  ALT_EMAC_DMA_INT_EN_RIE_SET_MSK | 
-                  ALT_EMAC_DMA_INT_EN_TIE_SET_MSK, 
+   alt_eth_dma_set_irq(ALT_EMAC_DMA_INT_EN_NIE_SET_MSK |
+                  ALT_EMAC_DMA_INT_EN_RIE_SET_MSK |
+                  ALT_EMAC_DMA_INT_EN_TIE_SET_MSK,
                   ENABLE);
 }
 

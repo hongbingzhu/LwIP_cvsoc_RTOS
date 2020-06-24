@@ -29,8 +29,8 @@
 #include "lwip/dhcp.h"
 #include "ethernetif.h"
 #include "alt_ethernet.h"
+#include "WebServer.h"	// hardware interface, for LED.
 #include "NetAddr.h"
-#include "WebServer.h"
 
 /* ------------------------------------------------------------------------------------------------ */
 
@@ -78,8 +78,6 @@ void GetMACaddr(u8_t MACaddr[NETIF_MAX_HWADDR_LEN])
 
 void LwIP_Init(void)
 {
-char           AddrTxt[17];
-char          *Baddr;
 struct ip_addr IPaddr;
 struct ip_addr NetMask;
 struct ip_addr GateWay;
@@ -92,6 +90,7 @@ struct ip_addr GateWay;
 	DHCPtimeFine    = 0;
 	TCPTimer        = 0;
 
+	sys_init();
 	mem_init();										/* Init dynamic memory (size is MEM_SIZE)		*/
 	memp_init();									/* Init the mempry pools (number is MEMP_NUM_x)	*/
 
@@ -104,16 +103,10 @@ struct ip_addr GateWay;
 		IPaddr.addr  = G_IPnetDefIP;
 		NetMask.addr = G_IPnetDefNM;
 		GateWay.addr = G_IPnetDefGW;
-		Baddr        = (char *)&G_IPnetDefIP;
-	  #if BYTE_ORDER == BIG_ENDIAN
-		sprintf(&AddrTxt[0],"   %d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
-	  #else
-		sprintf(&AddrTxt[0],"   %d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
-	  #endif
-		printf("Static IP address : ");
-		PrtAddr(G_IPnetDefIP);
-		puts("\n\nThe webserver is ready");
-		puts("\n\nThe Ethernet interface is ready");
+
+		N_PRINTF("Static IP address : "); PrintIPv4Addr(G_IPnetDefIP);
+		N_PUTS("\n\nThe webserver is ready");
+		N_PUTS("\n\nThe Ethernet interface is ready");
 
 		GPIO_SET(LED_0, 0);							/* Turn ON LED #0								*/
 	}
@@ -129,7 +122,7 @@ struct ip_addr GateWay;
 
 /* ------------------------------------------------------------------------------------------------ */
 
-void lwIPpacket(void)
+void LwIP_Packet(void)
 {
 	ethernetif_input(&g_NetIF);
 	return;
@@ -137,7 +130,7 @@ void lwIPpacket(void)
 
 /* ------------------------------------------------------------------------------------------------ */
 
-void lwIPperiodic(volatile u32_t Time)
+void LwIP_Periodic(volatile u32_t Time)
 {
 	if ((Time-TCPTimer) >= TCP_TMR_INTERVAL) {		/* TCP is processed periodicaly					*/
 		TCPTimer =  Time;
@@ -169,8 +162,6 @@ void lwIPperiodic(volatile u32_t Time)
 
 void DHCPprocess(void)
 {
-char           AddrTxt[17];
-char          *Baddr;
 struct ip_addr IPaddr;
 u32_t          DynamicIP;
 struct ip_addr GateWay;
@@ -187,10 +178,10 @@ static int     Toggle = 0;
 		case DHCP_WAIT_ADDRESS:
 			GPIO_SET(LED_0, Toggle);
 			if (Toggle == 0) {						/* Blink the "waiting for DHCP" message			*/
-				printf("Waiting for DHCP server\r");
+				N_PRINTF("Waiting for DHCP server\r");
 			}
 			else {
-				printf("                       \r");
+				N_PRINTF("                       \r");
 			}
 			Toggle = (Toggle+1) & 1;
 
@@ -199,16 +190,8 @@ static int     Toggle = 0;
 				DHCPstate = DHCP_GOT_ADDRESS;		/* gave us our address							*/
 				dhcp_stop(&g_NetIF);				/* We can stop the DCHP client					*/
 
-				Baddr     = (char *)&DynamicIP;
-			  #if BYTE_ORDER == BIG_ENDIAN
-				sprintf(&AddrTxt[0],"   %d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
-			  #else
-				sprintf(&AddrTxt[0],"   %d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
-			  #endif
-
-				printf("Dynamic IP address : ");
-				PrtAddr(DynamicIP);
-				puts("\n\nThe Ethernet interface is ready");
+				N_PRINTF("Dynamic IP address : "); PrintIPv4Addr(DynamicIP);
+				N_PUTS("\n\nThe Ethernet interface is ready");
 				GPIO_SET(LED_0, 0);				/* Keep LED #0 ON								*/
 				DHCPstate = DHCP_DONE;
 			}
@@ -223,15 +206,9 @@ static int     Toggle = 0;
 
 					netif_set_addr(&g_NetIF, &IPaddr , &NetMask, &GateWay);
 
-					Baddr = (char *)&IPaddr.addr;
-				  #if BYTE_ORDER == BIG_ENDIAN
-					sprintf(&AddrTxt[0],"   %d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
-				  #else
-					sprintf(&AddrTxt[0],"   %d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
-				  #endif
-					printf("\nDHCP timeout, fallback to static address : %d.%d.%d.%d\n",
+					N_PRINTF("\nDHCP timeout, fallback to static address : %d.%d.%d.%d\n",
 					                        IP_ADDR0 ,IP_ADDR1 , IP_ADDR2 , IP_ADDR3);
-					puts("\n\nThe Ethernet interface is ready");
+					N_PUTS("\n\nThe Ethernet interface is ready");
 					GPIO_SET(LED_0, 0);				/* Keep LED #0 ON								*/
 					dhcp_stop(&g_NetIF);			/* After stop, we can ask again for an address	*/
 
@@ -252,15 +229,15 @@ static int     Toggle = 0;
 
 /* ------------------------------------------------------------------------------------------------ */
 
-void PrtAddr(u32_t Addr)
+void PrintIPv4Addr(u32_t Addr)
 {
 u8_t *Baddr;
 
 	Baddr = (u8_t *)&Addr;
   #if BYTE_ORDER == BIG_ENDIAN
-	printf("%d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
+	N_PRINTF("%d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
   #else
-	printf("%d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
+	N_PRINTF("%d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
   #endif
 	return;
 }
@@ -269,7 +246,7 @@ u8_t *Baddr;
 
 void Time_Update(void)
 {
-  G_IPnetTime += SYSTICK_MS;
+	G_IPnetTime += SYSTICK_MS;	// when no OS
 }
 
 #include "os.h"

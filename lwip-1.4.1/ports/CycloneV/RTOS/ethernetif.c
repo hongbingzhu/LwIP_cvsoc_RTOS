@@ -40,7 +40,8 @@
 #include "netif/etharp.h"
 #include "ethernetif.h"
 #include "alt_eth_dma.h"
-#include "sys_arch.h"
+#include "arch/sys_arch.h"
+#include "lwip/sys.h"
 #include <string.h>
 
 #ifndef NETIF_MTU
@@ -86,7 +87,6 @@ extern uint8_t                 Tx_Buff[ETH_TXBUFNB][ETH_TX_BUF_SIZE];
 extern ETH_DMADESCTypeDef     *G_DMATxDescToSet;/* Pointer tracking current TX descriptors			*/
 extern ETH_DMA_Rx_Frame_infos *G_DMArxFrameInfo;/* Global pointer for last received frame infos	*/
 
-static void ethernetif_input(void *Arg);
 void GetMACaddr(u8_t MACaddr[NETIF_MAX_HWADDR_LEN]);
 
 /*--------------------------------------------------------------------------------------------------*/
@@ -267,6 +267,7 @@ struct pbuf *p;
 	for(;;) {
 		sys_arch_sem_wait(&EthRXsem, 0);		/* Wait for the ISR to deliver a buffer				*/
 		p = low_level_input(s_pxNetIf);			/* Process the input buffer							*/
+		puts(">");
 		if (p != (struct pbuf *)NULL) {			/* OK, we got a valid buffer						*/
 			if (ERR_OK != s_pxNetIf->input(p, s_pxNetIf)) {
 				pbuf_free(p);
@@ -312,7 +313,7 @@ err_t ethernetif_init(struct netif *netif)
 /* EMAC interrupt handler																			*/
 /*--------------------------------------------------------------------------------------------------*/
 
-void Emac1_IRQHandler(void)
+void Emac0_IRQHandler(u32_t cpu_id)
 {
 												/* Check for a status change on the link			*/
 	if (EMAC_GMAC_INTERRUPT_STATUS & INTERRUPT_STATUS_RGSMIIIS) {
@@ -331,7 +332,8 @@ void Emac1_IRQHandler(void)
 	}
 	else {										/* Not a link status change							*/
 		if (EMAC_DMA_STATUS & DMA_STATUS_RI) {	/* Was a new frame received ?						*/
-			SEMpost(EthRXsem);					/* Post the semaphore ethernetif_input() blocks on	*/
+			sys_sem_signal(&EthRXsem);			/* Post the semaphore ethernetif_input() blocks on	*/
+			puts("*");
 		}
 		EMAC_DMAclearPendIT(DMA_STATUS_RI|DMA_STATUS_NIS);	/* Clear RX & Normal interrupt flags	*/
 	}

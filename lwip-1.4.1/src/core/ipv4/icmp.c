@@ -78,7 +78,7 @@ icmp_input(struct pbuf *p, struct netif *inp)
 {
   u8_t type;
 #ifdef LWIP_DEBUG
-  u8_t code;
+  u8_t code __attribute__((unused));
 #endif /* LWIP_DEBUG */
   struct icmp_echo_hdr *iecho;
   struct ip_hdr *iphdr;

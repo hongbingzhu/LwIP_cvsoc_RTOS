@@ -36,10 +36,11 @@
 #include "alt_16550_uart.h"
 #include "alt_ethernet.h"
 #include "alt_eth_dma.h"
+#include "alt_interrupt.h"	// IRQ number
 #include "NetAddr.h"
 #include "httpd.h"
-#include "WebServer.h"
 #include "os.h"
+#include "bsp_int.h"
 
 /* ------------------------------------------------ */
 
@@ -63,12 +64,12 @@ ALT_16550_HANDLE_t G_UARThndl;
 
 /* ------------------------------------------------ */
 
-void EnbInt(void);
+extern void EnbInt(void);
 int  GetKey(void);								/* Non-blocking keyboard input					*/
 void GICenable(int IntNmb, int Prio, int Edge);
 void GICinit(void);
 int  __putchar(int);
-void Time_Update(void);
+extern void Time_Update(void);
 void TIMERinit(unsigned int Reload);
 void UARTinit(int BaudRate);
 
@@ -96,33 +97,33 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 
 /* ------------------------------------------------ */
 /* LED & switches setup								*/
+#if 0
+	GPIO_DIR(LED_0, 1);								/* Set all 4 LED pins in output					*/
+	GPIO_DIR(LED_1, 1);
+	GPIO_DIR(LED_2, 1);
+	GPIO_DIR(LED_3, 1);
 
-//	GPIO_DIR(LED_0, 1);								/* Set all 4 LED pins in output					*/
-//	GPIO_DIR(LED_1, 1);
-//	GPIO_DIR(LED_2, 1);
-//	GPIO_DIR(LED_3, 1);
-//
-//	GPIO_SET(LED_0, 1);								/* Make sure they are all OFF					*/
-//	GPIO_SET(LED_1, 1);
-//	GPIO_SET(LED_2, 1);
-//	GPIO_SET(LED_3, 1);
-//
-//	GPIO_DIR(SW_0, 0);
-//	GPIO_DIR(SW_1, 0);
-//	GPIO_DIR(SW_2, 0);
-//	GPIO_DIR(SW_3, 0);
+	GPIO_SET(LED_0, 1);								/* Make sure they are all OFF					*/
+	GPIO_SET(LED_1, 1);
+	GPIO_SET(LED_2, 1);
+	GPIO_SET(LED_3, 1);
 
+	GPIO_DIR(SW_0, 0);
+	GPIO_DIR(SW_1, 0);
+	GPIO_DIR(SW_2, 0);
+	GPIO_DIR(SW_3, 0);
+#endif
 /* ------------------------------------------------ */
 /* SysTick Set-up									*/
+#if 0	// Use OS's system tick and OS's interrupt management.
+	GICinit();
+	EnbInt();
 
-//	GICinit();
-//	EnbInt();
-
-//	ISRinstall(29, Time_Update);
-//	TIMERinit(((((SYS_FREQ/4)/100000)*(SYSTICK_MS*1000))/(10)));
-//	GICenable(29, 128, 1);							/* Private timer interrupt ID is 29 prio=mid	*/
+	ISRinstall(29, Time_Update);
+	TIMERinit(((((SYS_FREQ/4)/100000)*(SYSTICK_MS*1000))/(10)));
+	GICenable(29, 128, 1);							/* Private timer interrupt ID is 29 prio=mid	*/
 													/* The Cyclone V is set with a /4 prescaler		*/
-
+#endif
 /* ------------------------------------------------ */
 /* Default static Addresses & Mask					*/
 
@@ -134,15 +135,15 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 /* ------------------------------------------------ */
 /* UART prompt and key pressed check				*/
 
-	printf("\n  Standalone Demo  \n");
-	printf("  lwIP  Webserver   \n");
-	printf("\nDefaults settings:\n");
-	printf("IP address : "); PrtAddr(G_IPnetDefIP); printf("\n");
-	printf("Net Mask   : "); PrtAddr(G_IPnetDefNM); printf("\n");
-	printf("Gateway    : "); PrtAddr(G_IPnetDefGW); printf("\n");
-	printf("\n");
-	printf("DHCP will start in 5s.\n");
-	printf("Type any key use static IP address\n");
+	N_PRINTF("\n  Standalone Demo  \n");
+	N_PRINTF("  lwIP  Webserver   \n");
+	N_PRINTF("\nDefaults settings:\n");
+	N_PRINTF("IP address : "); PrintIPv4Addr(G_IPnetDefIP); N_PRINTF("\n");
+	N_PRINTF("Net Mask   : "); PrintIPv4Addr(G_IPnetDefNM); N_PRINTF("\n");
+	N_PRINTF("Gateway    : "); PrintIPv4Addr(G_IPnetDefGW); N_PRINTF("\n");
+	N_PRINTF("\n");
+	N_PRINTF("DHCP will start in 5s.\n");
+	N_PRINTF("Type any key use static IP address\n");
 
 	WaitTime = G_IPnetTime;
 	LastWait = -1;
@@ -150,13 +151,13 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 		ii = G_IPnetTime-WaitTime;
 		if (LastWait != (5999-ii)/1000) {
 			LastWait = (5999-ii)/1000;
-			printf("\r\r\r\r%d s", LastWait);
+			N_PRINTF("\r\r\r\r%d s", LastWait);
 		}
 		G_IPnetStatic = GetKey();					/* Check if user pressed a key					*/
 	} while((ii < 5000)								/* Check for 5 seconds							*/
 	  &&    (G_IPnetStatic == 0));					/* Or until a key is pressed					*/
 
-	printf("\r\r\r   \r\r\r\n");					/* Erase the remaining time from UART screen	*/
+	N_PRINTF("\r\r\r   \r\r\r\n");					/* Erase the remaining time from UART screen	*/
 
 /* ------------------------------------------------ */
 /* lwIP initialization								*/
@@ -167,17 +168,28 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
     httpd_ssi_init();
 	httpd_cgi_init();
 
-	puts("The webserver is ready");
+	N_PUTS("The webserver is ready");
 
 /* ------------------------------------------------ */
 /* Processing loop									*/
-
+#if NO_SYS
 	while (1) {										/* Processing is an infinite loop				*/
 		if (ETH_CheckFrameReceived()) {				/* Did we received a packet?					*/
-			lwIPpacket();							/* Process the packet							*/
+			LwIP_Packet();							/* Process the packet							*/
 		}
-		lwIPperiodic(G_IPnetTime);					/* Periodic timer for lwIP						*/
+		LwIP_Periodic(G_IPnetTime);					/* Periodic timer for lwIP						*/
 	}
+#else
+	extern void Emac0_IRQHandler(CPU_INT32U cpu_id);	/* in ports/.../RTOS/ethernetif.c */
+	BSP_IntVectSet (ALT_INT_INTERRUPT_EMAC0_IRQ,
+					2u,
+					0x01,	// handle by Core-0
+					Emac0_IRQHandler);
+
+	BSP_IntSrcEn(ALT_INT_INTERRUPT_EMAC0_IRQ);
+
+	return 0;
+#endif
 }
 
 /* ------------------------------------------------------------------------------------------------ */

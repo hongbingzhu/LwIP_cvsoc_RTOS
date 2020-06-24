@@ -83,7 +83,6 @@
 #include "httpd_structs.h"
 #include "lwip/tcp.h"
 #include "fs.h"
-#include "NetAddr.h"
 
 #include <string.h>
 #include <stdlib.h>
