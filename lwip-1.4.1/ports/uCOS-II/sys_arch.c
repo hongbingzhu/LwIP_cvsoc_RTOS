@@ -38,6 +38,8 @@
 #include "lwip/sys.h"
 #include "lwip/mem.h"
 #include "lwip/stats.h"
+
+#if !NO_SYS
 #include "ucos_ii.h"
 #include "sys_arch.h"
 #include <stdlib.h>
@@ -555,5 +557,5 @@ void sys_msleep(u32_t ms)
 }
 
 /*--------------------------------------------------------------------------------------------------*/
-
+#endif // !NO_SYS
 /* EOF */

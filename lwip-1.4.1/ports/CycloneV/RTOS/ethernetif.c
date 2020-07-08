@@ -40,9 +40,12 @@
 #include "netif/etharp.h"
 #include "ethernetif.h"
 #include "alt_eth_dma.h"
+#include <string.h>
+#include "app_def.h"
+
+#if !NO_SYS
 #include "arch/sys_arch.h"
 #include "lwip/sys.h"
-#include <string.h>
 
 #ifndef NETIF_MTU
   #define NETIF_MTU					1500		/* Maximum transfer unit							*/
@@ -261,15 +264,18 @@ volatile ETH_DMADESCTypeDef *DMARxNextDesc;
  */
 void ethernetif_input(void *Arg)
 {
+err_t Err;
 struct pbuf *p;
 
 	Arg = Arg;
 	for(;;) {
-		sys_arch_sem_wait(&EthRXsem, 0);		/* Wait for the ISR to deliver a buffer				*/
+		sys_sem_wait(&EthRXsem);				/* Wait for the ISR to deliver a buffer				*/
 		p = low_level_input(s_pxNetIf);			/* Process the input buffer							*/
-		fputc('>', stdout);
 		if (p != (struct pbuf *)NULL) {			/* OK, we got a valid buffer						*/
-			if (ERR_OK != s_pxNetIf->input(p, s_pxNetIf)) {
+			//PRINTF(">\n");
+			Err = s_pxNetIf->input(p, s_pxNetIf);
+			if (Err != ERR_OK) {
+				PRINTF("ethernetif_input: IP input error\n");
 				pbuf_free(p);
 			}
 		}
@@ -301,10 +307,8 @@ err_t ethernetif_init(struct netif *netif)
 	netif->output     = etharp_output;
 	netif->linkoutput = low_level_output;
 
-#if !NO_SYS
 	extern void sys_init(void);
 	sys_init();
-#endif
 
 	low_level_init(netif);						/* Initialize the hardware							*/
 
@@ -328,21 +332,22 @@ void Emac0_IRQHandler(u32_t cpu_id)
 		} while(EMAC_GMAC_INTERRUPT_STATUS & INTERRUPT_STATUS_RGSMIIIS);
 	  #else
 		if ((EMAC_GMACS_GMII_RGMII_SMII_CONTROL_STATUS & LINK_STS) == LINK_STS_LINKDOWN) {
-			puts("Link Down");					/* Be careful when using puts() in an interrupt		*/
+			PUTS("Link Down");					/* Be careful when using puts() in an interrupt		*/
 		}
 		else {
-			puts("Link Up");					/* Be careful when using puts() in an interrupt		*/
+			PUTS("Link Up");					/* Be careful when using puts() in an interrupt		*/
 		}
 	  #endif
 	}
 	else {										/* Not a link status change							*/
 		if (EMAC_DMA_STATUS & DMA_STATUS_RI) {	/* Was a new frame received ?						*/
 			sys_sem_signal(&EthRXsem);			/* Post the semaphore ethernetif_input() blocks on	*/
-			fputc('*', stdout);
+			//PRINTF("*\n");
 		}
 		EMAC_DMAclearPendIT(DMA_STATUS_RI|DMA_STATUS_NIS);	/* Clear RX & Normal interrupt flags	*/
 	}
 	return;
 }
 
+#endif // !NO_SYS
 /* EOF */

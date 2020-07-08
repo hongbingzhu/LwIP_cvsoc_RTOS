@@ -31,6 +31,7 @@
 #include "alt_ethernet.h"
 #include "WebServer.h"	// hardware interface, for LED.
 #include "NetAddr.h"
+#include "app_def.h"	// trace
 
 /* ------------------------------------------------------------------------------------------------ */
 
@@ -103,9 +104,9 @@ struct ip_addr GateWay;
 		NetMask.addr = G_IPnetDefNM;
 		GateWay.addr = G_IPnetDefGW;
 
-		printf("Static IP address : "); PrintIPv4Addr(G_IPnetDefIP);
-		puts("\n\nThe webserver is ready");
-		puts("\n\nThe Ethernet interface is ready");
+		PRINTF("Static IP address : %s\n", ip4_ntop(G_IPnetDefIP));
+		PRINTF("The webserver is ready\n");
+		PRINTF("The Ethernet interface is ready\n");
 
 		GPIO_SET(LED_0, 0);							/* Turn ON LED #0								*/
 	}
@@ -165,7 +166,7 @@ struct ip_addr IPaddr;
 u32_t          DynamicIP;
 struct ip_addr GateWay;
 struct ip_addr NetMask;
-static int     Toggle = 0;
+//static int     Toggle = 0;
 
 	switch (DHCPstate) {
 		case DHCP_START:
@@ -175,22 +176,22 @@ static int     Toggle = 0;
 			break;
 
 		case DHCP_WAIT_ADDRESS:
-			GPIO_SET(LED_0, Toggle);
-			if (Toggle == 0) {						/* Blink the "waiting for DHCP" message			*/
-				printf("Waiting for DHCP server\r");
-			}
-			else {
-				printf("                       \r");
-			}
-			Toggle = (Toggle+1) & 1;
+			//GPIO_SET(LED_0, Toggle);
+			//if (Toggle == 0) {						/* Blink the "waiting for DHCP" message			*/
+			//	PRINTF("Waiting for DHCP server\r");
+			//}
+			//else {
+			//	PRINTF("                       \r");
+			//}
+			//Toggle = (Toggle+1) & 1;
 
 			DynamicIP = g_NetIF.ip_addr.addr;		/* Grab the current address						*/
 			if (DynamicIP != 0) {					/* If the address is not 0 anymore, DHCP server	*/
 				DHCPstate = DHCP_GOT_ADDRESS;		/* gave us our address							*/
 				dhcp_stop(&g_NetIF);				/* We can stop the DCHP client					*/
 
-				printf("Dynamic IP address : "); PrintIPv4Addr(DynamicIP);
-				puts("\n\nThe Ethernet interface is ready");
+				PRINTF("Dynamic IP address : %s\n", ip4_ntop(DynamicIP));
+				PRINTF("The Ethernet interface is ready\n");
 				GPIO_SET(LED_0, 0);				/* Keep LED #0 ON								*/
 				DHCPstate = DHCP_DONE;
 			}
@@ -205,9 +206,9 @@ static int     Toggle = 0;
 
 					netif_set_addr(&g_NetIF, &IPaddr , &NetMask, &GateWay);
 
-					printf("\nDHCP timeout, fallback to static address : %d.%d.%d.%d\n",
+					PRINTF("DHCP timeout, fallback to static address : %d.%d.%d.%d\n",
 					                        IP_ADDR0 ,IP_ADDR1 , IP_ADDR2 , IP_ADDR3);
-					puts("\n\nThe Ethernet interface is ready");
+					PRINTF("The Ethernet interface is ready\n");
 					GPIO_SET(LED_0, 0);				/* Keep LED #0 ON								*/
 					dhcp_stop(&g_NetIF);			/* After stop, we can ask again for an address	*/
 
@@ -228,17 +229,18 @@ static int     Toggle = 0;
 
 /* ------------------------------------------------------------------------------------------------ */
 
-void PrintIPv4Addr(u32_t Addr)
+const char * ip4_ntop(u32_t Addr)
 {
+static char buff[20];
 u8_t *Baddr;
 
 	Baddr = (u8_t *)&Addr;
   #if BYTE_ORDER == BIG_ENDIAN
-	printf("%d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
+	snprintf(buff, sizeof(buff), "%d.%d.%d.%d", Baddr[3], Baddr[2], Baddr[1], Baddr[0]);
   #else
-	printf("%d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
+	snprintf(buff, sizeof(buff), "%d.%d.%d.%d", Baddr[0], Baddr[1], Baddr[2], Baddr[3]);
   #endif
-	return;
+	return buff;
 }
 
 /* ------------------------------------------------------------------------------------------------ */

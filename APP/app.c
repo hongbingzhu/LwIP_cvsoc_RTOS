@@ -61,6 +61,9 @@
 
 CPU_STK AppTaskStartStk[APP_START_TASK_STACK_SIZE];
 CPU_STK WatchDogTaskStk[WATCH_DOG_TASK_STACK_SIZE];
+CPU_STK TraceOutTaskStk[TRACE_OUT_STACK_SIZE];
+
+OS_EVENT * m_traceNotify;
 
 /*
 *********************************************************************************************************
@@ -70,6 +73,7 @@ CPU_STK WatchDogTaskStk[WATCH_DOG_TASK_STACK_SIZE];
 
 static  void  AppTaskStart              (void        *p_arg);
 static  void  WatchDogTask              (void        *p_arg);
+static  void  TraceOutTask              (void        *p_arg);
 
 /*
 *********************************************************************************************************
@@ -193,4 +197,142 @@ void  WatchDogTask (void *p_arg)
         OSTimeDlyHMSM(0, 0, 0, 500);
         BSP_LED_Flash(0);
     }
+}
+
+/*
+*********************************************************************************************************
+*********************************************************************************************************
+*/
+void OSStartTrace(void)
+{
+	INT8U os_err;
+    m_traceNotify = OSMboxCreate(NULL);
+    OSEventNameSet(m_traceNotify, "TraceNotify", &os_err);
+
+    os_err = OSTaskCreateExt((void (*)(void *)) TraceOutTask,   /* Create the trace out task.                            */
+                             (void          * ) 0,
+                             (OS_STK        * )&TraceOutTaskStk[TRACE_OUT_STACK_SIZE - 1],
+                             (INT8U           ) TRACE_OUT_TASK_PRIO,
+                             (INT16U          ) TRACE_OUT_TASK_ID,
+                             (OS_STK        * )&TraceOutTaskStk[0],
+                             (INT32U          ) TRACE_OUT_STACK_SIZE,
+                             (void          * )0,
+                             (INT16U          )(OS_TASK_OPT_STK_CLR | OS_TASK_OPT_STK_CHK));
+    OSTaskNameSet(TRACE_OUT_TASK_PRIO, (INT8U *)(void *)"TraceOut", &os_err);
+}
+
+#include "alt_16550_uart.h"
+#include <stdarg.h>
+#include <string.h>	// memcpy
+ALT_16550_HANDLE_t G_UARThndl;
+
+typedef struct TraceBuff_t
+{
+	char buff[4096];
+	int  p_in, p_out;	// data in, data out
+	uint32_t cnt;	// count in buffer
+} TraceBuff;
+TraceBuff m_tbuff;
+
+static int TracePuts(const char * msg, int len)
+{
+	OS_CPU_SR cpu_sr;
+	OS_ENTER_CRITICAL();
+	if (len > sizeof(m_tbuff.buff) - m_tbuff.cnt)
+		len = sizeof(m_tbuff.buff) - m_tbuff.cnt;
+	const char * p = msg;
+	int ret_len = len;
+	if (len + m_tbuff.p_in >= sizeof(m_tbuff.buff))
+	{
+		int this_len = sizeof(m_tbuff.buff) - m_tbuff.p_in;
+		memcpy(m_tbuff.buff+m_tbuff.p_in, p, this_len);
+		len -= this_len;
+		p += this_len;
+		m_tbuff.p_in = 0;
+		m_tbuff.cnt += this_len;
+	}
+	if (len)
+	{
+		memcpy(m_tbuff.buff+m_tbuff.p_in, p, len);
+		m_tbuff.p_in += len;
+		m_tbuff.cnt += len;
+	}
+	OS_EXIT_CRITICAL();
+	OSMboxPost(m_traceNotify, (void *)1);
+
+	return ret_len;
+}
+
+int TracePrintf(const char * fmt, ...)
+{
+	char buff[128];
+	int len = snprintf(buff, sizeof(buff), "%8d ", OSTimeGet());
+
+	va_list args;
+	va_start(args, fmt);
+	len += vsnprintf(buff+len, sizeof(buff)-len, fmt, args);
+	va_end(args);
+	if (len > sizeof(buff)) while (1) ;
+
+	return TracePuts(buff, len);
+}
+
+#define UART_FIFO_SIZE		128
+void TraceOutTask(void *p_arg)
+{
+	INT8U os_err;
+	uint32_t fifo_size;
+	alt_16550_fifo_size_get_tx(&G_UARThndl, &fifo_size);
+	if (fifo_size > UART_FIFO_SIZE) while (1) ;
+
+	while (1)
+	{
+		OSMboxPend(m_traceNotify, 0, &os_err);
+		while (m_tbuff.cnt > 0)
+		{
+			uint32_t uu;
+			while (1) {
+				alt_16550_fifo_level_get_tx(&G_UARThndl, &uu);
+				if (uu >= 1) OSTimeDly(uu);
+				else break;
+			};
+			uint32_t cnt = m_tbuff.cnt;
+			uint32_t n = (cnt > fifo_size) ? fifo_size : cnt;
+			if (n + m_tbuff.p_out > sizeof(m_tbuff.buff))
+				n = sizeof(m_tbuff.buff) - m_tbuff.p_out;
+			uint32_t fifo_n = n;
+			char buff[UART_FIFO_SIZE];
+			const char * p = m_tbuff.buff+m_tbuff.p_out;
+			for (int i = 0; i < fifo_n; i++)
+			{
+				char ch = *p++;
+				if (ch == '\n')	// we should insert '\r'
+				{
+					if ((fifo_n == fifo_size) && (i == fifo_n - 1))
+					{
+						// if full FIFO write and last char, we skip it this round
+						n--; fifo_n--; break;
+					}
+					else
+					{
+						buff[i++] = '\r';
+						if (fifo_n == fifo_size)
+							n--;		// full FIFO write, decrease a written char
+						else
+							fifo_n++;	// not full FIFO write, increase write length
+					}
+				}
+				buff[i] = ch;
+			}
+			alt_16550_fifo_write(&G_UARThndl, buff, fifo_n);
+
+			OS_CPU_SR cpu_sr;
+			OS_ENTER_CRITICAL();
+			m_tbuff.cnt -= n;
+			m_tbuff.p_out += n;
+			if (m_tbuff.p_out >= sizeof(m_tbuff.buff))
+				m_tbuff.p_out -= sizeof(m_tbuff.buff);
+			OS_EXIT_CRITICAL();
+		}
+	}
 }

@@ -62,6 +62,8 @@
 /** flag for LWIP_DEBUGF to halt after printing this debug message */
 #define LWIP_DBG_HALT          0x08U
 
+#define LWIP_DBG_TYPES_ALL     0x78U
+
 #ifndef LWIP_NOASSERT
 #define LWIP_ASSERT(message, assertion) do { if(!(assertion)) \
   LWIP_PLATFORM_ASSERT(message); } while(0)

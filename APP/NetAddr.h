@@ -84,7 +84,7 @@ void LwIP_Init(void);
 void LwIP_Packet(void);
 void LwIP_Periodic(volatile u32_t localtime);
 
-void PrintIPv4Addr(u32_t);
+const char * ip4_ntop(u32_t);
 void Time_Update(void);
 
 extern u32_t          G_IPnetDefGW;

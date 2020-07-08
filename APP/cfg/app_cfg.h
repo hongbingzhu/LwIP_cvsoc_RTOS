@@ -56,4 +56,8 @@
 #define LWIP_TSK_ID					10
 #define LWIP_STK_SIZE				4096u
 
+#define TRACE_OUT_TASK_PRIO			60
+#define TRACE_OUT_TASK_ID			60
+#define TRACE_OUT_STACK_SIZE		2048u
+
 #endif /* __APP_CFG_H__ */

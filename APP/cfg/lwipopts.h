@@ -178,8 +178,9 @@ The Cylone V allows computing and verifying the IP, UDP, TCP and ICMP checksums 
    -----------------------------------
 */
 
-#define LWIP_DEBUG				0
-#define LWIP_PLATFORM_DIAG(x)
+#define LWIP_DEBUG				1
+extern int TracePrintf(const char * fmt, ...);
+#define LWIP_PLATFORM_DIAG(x)	TracePrintf x
 
 /*
    ---------------------------------

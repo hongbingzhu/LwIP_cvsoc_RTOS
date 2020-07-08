@@ -42,8 +42,12 @@ uint16_t 	u16_phy_regs[40];
 
 void alt_eth_delay(volatile uint32_t delay)
 {
-  volatile uint32_t index = 0;
-  for(index = delay; index != 0; index--);
+//  volatile uint32_t index = 0;
+//  for(index = delay; index != 0; index--);
+	delay >>= 16;
+	delay++;
+	extern void OSTimeDly(uint32_t ms);
+	OSTimeDly(delay);
 }
 
 

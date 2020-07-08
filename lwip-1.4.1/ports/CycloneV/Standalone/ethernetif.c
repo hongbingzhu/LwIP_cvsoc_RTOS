@@ -43,6 +43,10 @@
 #include "alt_eth_dma.h"
 #include <string.h>
 
+#include "app_def.h"
+
+#if NO_SYS
+
 #ifndef NETIF_MTU
   #define NETIF_MTU					1500		/* Maximum transfer unit							*/
 #endif
@@ -171,20 +175,20 @@ int          RetSize;
 
 volatile  ETH_DMADESCTypeDef *DMARxNextDesc;
 
-	netif   = netif;							/* To remove compiler warning						*/
+	netif   = netif;						/* To remove compiler warning						*/
 	BufDst  = NULL;
 	RetSize = 0;
-	Frame   = ETH_Get_Received_Frame();			/* Grab the received frame							*/
-	Len     = (int)Frame.length;				/* Size of the packet								*/
+	Frame   = ETH_Get_Received_Frame();		/* Grab the received frame							*/
+	Len     = (int)Frame.length;			/* Size of the packet								*/
 
   #if ETH_PAD_SIZE
 	Len += ETH_PAD_SIZE; /* allow room for Ethernet padding */
   #endif
 
-	Buf8    = (u8_t *)Frame.buffer;				/* Pointer to the packet							*/
+	Buf8    = (u8_t *)Frame.buffer;			/* Pointer to the packet							*/
 	BufDst  = pbuf_alloc(PBUF_RAW, Len, PBUF_POOL);	/* Get the buffer to return from the pool	*/
 	if (BufDst != NULL) { 					/* Copy RX frame (linked list) in dst buffer		*/
-			DROP_PAD(BufDst);					/* Drop the padding word if needed					*/
+		DROP_PAD(BufDst);					/* Drop the padding word if needed					*/
 
 		for (Bptr=BufDst ; Bptr!=NULL ; Bptr=Bptr->next) {
 			SMEMCPY((u8_t*)Bptr->payload, (u8_t*)&Buf8[RetSize], Bptr->len);
@@ -194,12 +198,12 @@ volatile  ETH_DMADESCTypeDef *DMARxNextDesc;
 		CLAIM_PAD(BufDst);					/* Reclaim the padding word if needed				*/
 
 	}
-		if (G_DMArxFrameInfo->Seg_Count > 1) {/* Release the descriptor back to the DMA			*/
-			DMARxNextDesc = G_DMArxFrameInfo->FS_Rx_Desc;
-		}
-		else {
-			DMARxNextDesc = Frame.descriptor;
-		}
+	if (G_DMArxFrameInfo->Seg_Count > 1) {/* Release the descriptor back to the DMA			*/
+		DMARxNextDesc = G_DMArxFrameInfo->FS_Rx_Desc;
+	}
+	else {
+		DMARxNextDesc = Frame.descriptor;
+	}
 
 	for (ii=0; ii<G_DMArxFrameInfo->Seg_Count; ii++) {	/* Give the buffers back to the DMA		*/
 		DMARxNextDesc->Status = ETH_DMARxDesc_OWN;
@@ -207,9 +211,9 @@ volatile  ETH_DMADESCTypeDef *DMARxNextDesc;
 	}
 	G_DMArxFrameInfo->Seg_Count =0;			/* Clear the segment count							*/
 
-	if (EMAC_DMA_STATUS & DMA_STATUS_RU) {		/* When the RX unvailable flag is set, resume RX	*/
-		EMAC_DMAclearPendIT(DMA_STATUS_RU);		/* Clear the RX unvailable flag						*/
-		EMAC_DMA_RECEIVE_POLL_DEMAND = 0;		/* And resume the DMA reception						*/
+	if (EMAC_DMA_STATUS & DMA_STATUS_RU) {	/* When the RX unvailable flag is set, resume RX	*/
+		EMAC_DMAclearPendIT(DMA_STATUS_RU);	/* Clear the RX unvailable flag						*/
+		EMAC_DMA_RECEIVE_POLL_DEMAND = 0;	/* And resume the DMA reception						*/
 	}
 
 	return(BufDst);
@@ -273,4 +277,5 @@ err_t ethernetif_init(struct netif *netif)
 	return(ERR_OK);
 }
 
+#endif // NO_SYS
 /* EOF */

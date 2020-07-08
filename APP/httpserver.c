@@ -41,6 +41,7 @@
 #include "httpd.h"
 #include "os.h"
 #include "bsp_int.h"
+#include "app_def.h"	// trace
 
 /* Switch between OS mode and Standalone:
  * 1. Change NO_SYS in "lwipopts.h"
@@ -64,7 +65,7 @@ extern   int   G_IPnetStatic;
 
 void (*G_OSisrTbl[1024])(void);
 
-ALT_16550_HANDLE_t G_UARThndl;
+extern ALT_16550_HANDLE_t G_UARThndl;
 
 /* ------------------------------------------------ */
 
@@ -87,10 +88,6 @@ void App_TimeTickHook(void)
 
 int lwip_app_main(void)
 {
-int  ii;											/* General purpose								*/
-int  LastWait;										/* Last elapse time (to update display)			*/
-int  WaitTime;										/* Elapsed time waiting for key pressed			*/
-
 /* ------------------------------------------------ */
 /* UART set-up										*/
 
@@ -98,6 +95,8 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 	setvbuf(stdout, NULL, _IONBF, 0);				/* buffer when full or when new-line			*/
 
 	UARTinit(BAUDRATE);
+	extern void OSStartTrace(void);
+	OSStartTrace();
 
 /* ------------------------------------------------ */
 /* LED & switches setup								*/
@@ -139,28 +138,27 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
 /* ------------------------------------------------ */
 /* UART prompt and key pressed check				*/
 
+#if NO_SYS
 	printf("\n  Standalone Demo  \n");
+#else
+	printf("\n  RTOS(uC/OS-II) Demo  \n");
+#endif
 	printf("  lwIP  Webserver   \n");
 	printf("\nDefaults settings:\n");
-	printf("IP address : "); PrintIPv4Addr(G_IPnetDefIP); printf("\n");
-	printf("Net Mask   : "); PrintIPv4Addr(G_IPnetDefNM); printf("\n");
-	printf("Gateway    : "); PrintIPv4Addr(G_IPnetDefGW); printf("\n");
+	printf("IP address : %s\n", ip4_ntop(G_IPnetDefIP));
+	printf("Net Mask   : %s\n", ip4_ntop(G_IPnetDefNM));
+	printf("Gateway    : %s\n", ip4_ntop(G_IPnetDefGW));
 	printf("\n");
 	printf("DHCP will start in 5s.\n");
 	printf("Type any key use static IP address\n");
 
-	WaitTime = G_IPnetTime;
-	LastWait = -1;
-	do {
-		ii = G_IPnetTime-WaitTime;
-		if (LastWait != (5999-ii)/1000) {
-			LastWait = (5999-ii)/1000;
-			printf("\r\r\r\r%d s", LastWait);
-		}
+	for (int i = 0; i < 5; i++) {
+		for (int k = 0; k < 1000/20; k++)
+			OSTimeDly(20);
+		printf("\r\r\r\r%d s", 5-i);
 		G_IPnetStatic = GetKey();					/* Check if user pressed a key					*/
-	} while((ii < 5000)								/* Check for 5 seconds							*/
-	  &&    (G_IPnetStatic == 0));					/* Or until a key is pressed					*/
-
+		if (G_IPnetStatic) break;
+	}
 	printf("\r\r\r   \r\r\r\n");					/* Erase the remaining time from UART screen	*/
 
 /* ------------------------------------------------ */
@@ -172,7 +170,7 @@ int  WaitTime;										/* Elapsed time waiting for key pressed			*/
     httpd_ssi_init();
 	httpd_cgi_init();
 
-	puts("The webserver is ready");
+	PRINTF("The webserver is ready\n");
 
 /* ------------------------------------------------ */
 /* Processing loop									*/

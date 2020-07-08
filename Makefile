@@ -108,7 +108,7 @@ ASM_SRCS += $(addprefix BSP/ARM_Compiler/,armv7a_tthelp.s bsp_cache.s startup.s)
 APP_SRCS += $(addprefix APP/,app.c alt_eth_dma.c alt_ethernet.c \
 	fs.c httpd_cgi_ssi.c httpd.c httpserver.c NetAddr.c)
 APP_SRCS += $(ALT_SRCS)
-#APP_SRCS += $(LWIP_DIR)/ports/CycloneV/Standalone/ethernetif.c
+APP_SRCS += $(LWIP_DIR)/ports/CycloneV/Standalone/ethernetif.c
 APP_SRCS += $(LWIP_DIR)/ports/CycloneV/RTOS/ethernetif.c
 APP_SRCS += $(LWIP_DIR)/ports/uCOS-II/sys_arch.c
 APP_OBJS := $(APP_SRCS:.c=.o)
