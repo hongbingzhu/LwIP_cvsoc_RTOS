@@ -52,7 +52,7 @@ LDFLAGS := --cpu=Cortex-A9 --entry=Start --scatter=""BSP/ARM_Compiler/scatter.sc
 # ===============================================================
 
 # pulic includes, for configure file
-PUB_INCS := APP/cfg
+CFG_INCS := APP/cfg
 ASM_OBJS :=
 
 # uC/OS objects
@@ -63,7 +63,7 @@ OS_VER := uCOS-II
 OS_INCS := uC-Common uC-Common/Auth uC-Common/KAL 
 OS_INCS += uC-CPU uC-CPU/ARM-Cortex-A/RealView uC-LIB
 OS_INCS += $(OS_VER) $(OS_VER)/Source $(OS_VER)/Ports/ARM-Cortex-A/Generic/RealView
-OS_INCS := $(addprefix $(OS_DIR)/,$(OS_INCS)) $(PUB_INCS)
+OS_INCS := $(addprefix $(OS_DIR)/,$(OS_INCS)) $(CFG_INCS)
 
 OS_SRCS := $(wildcard $(OS_DIR)/$(OS_VER)/Source/os_*.c)
 OS_SRCS += $(OS_DIR)/$(OS_VER)/Ports/ARM-Cortex-A/Generic/RealView/os_cpu_c.c
@@ -76,12 +76,11 @@ ASM_SRCS += $(OS_DIR)/uC-CPU/ARM-Cortex-A/RealView/cpu_a.s
 OS_SRCS += $(OS_DIR)/uC-CPU/cpu_core.c
 OS_OBJS := $(OS_SRCS:.c=.o)
 
-# lwip objects
+# lwip 1.4.1 objects
 LWIP_DIR := lwip-1.4.1
 
-LWIP_INCS := $(LWIP_DIR)/src/include $(LWIP_DIR)/src/include/ipv4 $(PUB_INCS) \
-	$(LWIP_DIR)/ports/CycloneV $(ALT_LIB)/include $(ALT_LIB)/include/socal \
-	$(OS_INCS)
+LWIP_INCS := $(LWIP_DIR)/src/include $(LWIP_DIR)/src/include/ipv4 $(CFG_INCS) \
+	$(LWIP_DIR)/ports/CycloneV $(ALT_LIB)/include $(ALT_LIB)/include/socal $(OS_INCS)
 
 LWIP_CORE_OBJS := def.o dhcp.o init.o mem.o memp.o netif.o pbuf.o raw.o stats.o \
 	tcp.o tcp_in.o tcp_out.o timers.o udp.o
@@ -117,8 +116,8 @@ APP_MIN_OBJS := $(addprefix BSP/,OS/bsp_os.o bsp_int.o bsp.o cpu_bsp.o) APP/app.
 ASM_OBJS := $(ASM_SRCS:.s=.o)
 
 # all objects
-OBJS := $(ASM_OBJS) $(OS_OBJS) $(LWIP_OBJS) $(APP_OBJS)
 #OBJS := $(ASM_OBJS) $(OS_OBJS) $(APP_MIN_OBJS)
+OBJS := $(ASM_OBJS) $(OS_OBJS) $(LWIP_OBJS) $(APP_OBJS)
 
 # ===============================================================
 # 4. Rules

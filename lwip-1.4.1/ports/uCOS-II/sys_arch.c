@@ -41,7 +41,7 @@
 
 #if !NO_SYS
 #include "ucos_ii.h"
-#include "sys_arch.h"
+#include "arch/sys_arch.h"
 #include <stdlib.h>
 #include <string.h>
 
