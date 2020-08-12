@@ -74,6 +74,12 @@ typedef OS_EVENT *sys_mutex_t;
 typedef OS_EVENT *sys_sem_t;
 typedef int       sys_thread_t;
 
+typedef OS_CPU_SR	sys_prot_t;
+
+void sys_assert(char *msg);
+void _sys_msleep(unsigned int ms);
+#define sys_msleep _sys_msleep
+
 #ifdef __cplusplus
 }
 #endif

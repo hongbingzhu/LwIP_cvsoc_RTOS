@@ -35,6 +35,7 @@
 #define u32 uint32_t
 #define u16 uint32_t
 
+// here and alt_ethernet.c, httpserver.c's BSP_IntVectSet() and BSP_IntSrcEn()
 #define EMAC0_BASE									0xFF700000
 #define EMAC1_BASE									0xFF702000
 #define EMAC_BASE									EMAC0_BASE

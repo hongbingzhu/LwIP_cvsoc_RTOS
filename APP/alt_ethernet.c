@@ -35,6 +35,8 @@
 
 uint16_t 	u16_phy_regs[40];
 
+// S-Board use EMAC0, while EVK-Board use EMAC1
+// change here(all 4 lines) and alt_eth_dma.h, httpserver.c
 #define ALT_EMAC_GMAC(reg)		ALT_EMAC0_GMAC_##reg
 #define ALT_EMAC_DMA(reg)		ALT_EMAC0_DMA_##reg
 #define ALT_RSTMGR_PERMODRST_EMAC_SET		ALT_RSTMGR_PERMODRST_EMAC0_SET
@@ -297,7 +299,7 @@ ALT_STATUS_CODE alt_eth_init(uint16_t phy_address)
       alt_mac_config_reg_settings &= ALT_EMAC_GMAC_MAC_CFG_PS_CLR_MSK;
    }
 
-   /* dump_phy_regs(phy_address);       */
+   /* dump_phy_regs(phy_address); */
 
 #endif      //#ifdef ALT_ETH_SET_EMAC_RATE
 

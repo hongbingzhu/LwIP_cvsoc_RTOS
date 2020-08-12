@@ -35,7 +35,11 @@
 #include "lwip/memp.h"
 #include "lwip/stats.h"
 #include "lwip/tcp.h"
+#if LWIP_VER == 1
 #include "lwip/tcp_impl.h"
+#elif LWIP_VER ==2
+#include "lwip/timeouts.h"
+#endif
 #include "lwip/udp.h"
 #include "netif/etharp.h"
 #include <stdio.h>
@@ -43,8 +47,6 @@
 
 
 /* ------------------------------------------------------------------------------------------------ */
-
-#define SYSTICK_MS  10
 
 #if BYTE_ORDER == BIG_ENDIAN
  #define IP4_INT32(a,b,c,d) (((a)<<24)|((b)<<16)|((c)<<8)|(d))
@@ -67,12 +69,12 @@
 #define GATEWAY_ADDR2   68							/* NetAddr.c									*/
 #define GATEWAY_ADDR3   1  							/* Currently set in main()						*/
 
-#define MAC_ADDR0   02								/* MAC address									*/
-#define MAC_ADDR1   23								/* If available from hardware, modify the		*/
-#define MAC_ADDR2   34								/* the function GetMACaddr() located in the		*/
-#define MAC_ADDR3   45								/* file NetAddr.c								*/
-#define MAC_ADDR4   56
-#define MAC_ADDR5   67
+#define MAC_ADDR0   0xFE							/* MAC address									*/
+#define MAC_ADDR1   0x23							/* If available from hardware, modify the		*/
+#define MAC_ADDR2   0x34							/* the function GetMACaddr() located in the		*/
+#define MAC_ADDR3   0x45							/* file NetAddr.c								*/
+#define MAC_ADDR4   0x56
+#define MAC_ADDR5   0x67
 
 #define MII_MODE
 
@@ -85,7 +87,8 @@ void LwIP_Packet(void);
 void LwIP_Periodic(volatile u32_t localtime);
 
 const char * ip4_ntop(u32_t);
-void Time_Update(void);
+#define SYSTICK_MS  10		// timer interval for baremetal mode
+void Time_Update(void);		// Timer ISR for baremetal mode
 
 extern u32_t          G_IPnetDefGW;
 extern u32_t          G_IPnetDefIP;

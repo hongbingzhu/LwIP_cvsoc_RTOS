@@ -234,7 +234,7 @@ typedef struct TraceBuff_t
 } TraceBuff;
 TraceBuff m_tbuff;
 
-static int TracePuts(const char * msg, int len)
+int TracePuts(const char * msg, int len)
 {
 	OS_CPU_SR cpu_sr;
 	OS_ENTER_CRITICAL();

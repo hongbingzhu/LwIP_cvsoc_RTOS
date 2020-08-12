@@ -18,6 +18,9 @@
 							<builder id="com.arm.toolchain.baremetal.builder.1381006567" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="com.arm.toolchain.baremetal.builder"/>
 							<tool id="com.arm.tool.c.compiler.1029121915" name="ARM C Compiler 5" superClass="com.arm.tool.c.compiler"/>
 							<tool id="com.arm.tool.cpp.compiler.812229464" name="ARM C++ Compiler 5" superClass="com.arm.tool.cpp.compiler">
+								<option id="com.arm.tool.c.compiler.option.defmac.1230349603" superClass="com.arm.tool.c.compiler.option.defmac" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="LWIP_VER=2"/>
+								</option>
 								<inputType id="com.arm.tool.c.compiler.input.1210076208" superClass="com.arm.tool.c.compiler.input"/>
 								<inputType id="com.arm.tool.cpp.compiler.input.668942793" superClass="com.arm.tool.cpp.compiler.input"/>
 							</tool>
@@ -26,15 +29,9 @@
 							<tool id="com.arm.tool.librarian.240329460" name="ARM Librarian 5" superClass="com.arm.tool.librarian"/>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="com.arm.toolchain.baremetal.535064381.798312925" name="/" resourcePath="lwip-1.4.1/ports/Abassi">
-						<toolChain id="com.arm.toolchain.baremetal.2037401715" name="com.arm.toolchain.baremetal" superClass="com.arm.toolchain.baremetal" unusedChildren="">
-							<tool id="com.arm.tool.c.compiler.1085063761" name="ARM C Compiler 5" superClass="com.arm.tool.c.compiler.1029121915"/>
-							<tool id="com.arm.tool.cpp.compiler.1648558955" name="ARM C++ Compiler 5" superClass="com.arm.tool.cpp.compiler.812229464"/>
-							<tool id="com.arm.tool.assembler.2081675226" name="ARM Assembler 5" superClass="com.arm.tool.assembler.610010194"/>
-							<tool id="com.arm.tool.c.linker.385700981" name="ARM Linker 5" superClass="com.arm.tool.c.linker.833058765"/>
-							<tool id="com.arm.tool.librarian.1832550541" name="ARM Librarian 5" superClass="com.arm.tool.librarian.240329460"/>
-						</toolChain>
-					</folderInfo>
+					<sourceEntries>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -43,13 +40,20 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="ucos_lwip.null.2004974079" name="ucos_lwip"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Default">
 			<resource resourceType="PROJECT" workspacePath="/ucos_lwip"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="com.arm.toolchain.baremetal.535064381;com.arm.toolchain.baremetal.535064381.1160765559;com.arm.tool.cpp.compiler.812229464;com.arm.tool.c.compiler.input.1210076208">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arm.eclipse.builder.armcc.ARMCompilerDiscoveryProfile"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="com.arm.toolchain.baremetal.535064381;com.arm.toolchain.baremetal.535064381.1160765559;com.arm.tool.cpp.compiler.812229464;com.arm.tool.cpp.compiler.input.668942793">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arm.eclipse.builder.armcc.ARMCompilerDiscoveryProfile"/>
+		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

@@ -43,8 +43,6 @@
 #include "alt_eth_dma.h"
 #include <string.h>
 
-#include "app_def.h"
-
 #if NO_SYS
 
 #ifndef NETIF_MTU

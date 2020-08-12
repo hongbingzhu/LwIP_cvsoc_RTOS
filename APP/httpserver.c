@@ -41,7 +41,6 @@
 #include "httpd.h"
 #include "os.h"
 #include "bsp_int.h"
-#include "app_def.h"	// trace
 
 /* Switch between OS mode and Standalone:
  * 1. Change NO_SYS in "lwipopts.h"
@@ -51,7 +50,7 @@
 
 #define BAUDRATE	ALT_16550_BAUDRATE_115200		/* Serial port baud rate						*/
 
-#define SYS_FREQ	800000000						/* Processor clock frequency: 800 MHz			*/
+#define SYS_FREQ	600000000						/* Processor clock frequency: 600 MHz			*/
 
 #define COREgetPeriph()			((unsigned int *)0xFFFEC000)
 #define ISRinstall(Nmb, Fct)	(G_OSisrTbl[(Nmb)]=(Fct))
@@ -74,15 +73,8 @@ int  GetKey(void);								/* Non-blocking keyboard input					*/
 void GICenable(int IntNmb, int Prio, int Edge);
 void GICinit(void);
 int  __putchar(int);
-extern void Time_Update(void);
 void TIMERinit(unsigned int Reload);
 void UARTinit(int BaudRate);
-
-/* ------------------------------------------------------------------------------------------------ */
-void App_TimeTickHook(void)
-{
-	G_IPnetTime = OSTimeGet();
-}
 
 /* ------------------------------------------------------------------------------------------------ */
 
@@ -143,23 +135,28 @@ int lwip_app_main(void)
 #else
 	printf("\n  RTOS(uC/OS-II) Demo  \n");
 #endif
-	printf("  lwIP  Webserver   \n");
+	printf("  LwIP  Webserver   \n");
 	printf("\nDefaults settings:\n");
 	printf("IP address : %s\n", ip4_ntop(G_IPnetDefIP));
 	printf("Net Mask   : %s\n", ip4_ntop(G_IPnetDefNM));
 	printf("Gateway    : %s\n", ip4_ntop(G_IPnetDefGW));
 	printf("\n");
-	printf("DHCP will start in 5s.\n");
-	printf("Type any key use static IP address\n");
 
-	for (int i = 0; i < 5; i++) {
+#if 1
+#define WAIT_STATIC_IP		2
+	printf("DHCP will start in %ds.\n", WAIT_STATIC_IP);
+	printf("Type any key use static IP address\n");
+	for (int i = 0; i < WAIT_STATIC_IP; i++) {
 		for (int k = 0; k < 1000/20; k++)
 			OSTimeDly(20);
-		printf("\r\r\r\r%d s", 5-i);
+		printf("\r\r\r\r%d s", WAIT_STATIC_IP-i);
 		G_IPnetStatic = GetKey();					/* Check if user pressed a key					*/
 		if (G_IPnetStatic) break;
 	}
 	printf("\r\r\r   \r\r\r\n");					/* Erase the remaining time from UART screen	*/
+#else
+	G_IPnetStatic = 1;
+#endif
 
 /* ------------------------------------------------ */
 /* lwIP initialization								*/

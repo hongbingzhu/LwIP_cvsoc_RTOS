@@ -31,7 +31,6 @@
 #include "alt_ethernet.h"
 #include "WebServer.h"	// hardware interface, for LED.
 #include "NetAddr.h"
-#include "app_def.h"	// trace
 
 /* ------------------------------------------------------------------------------------------------ */
 
@@ -45,23 +44,21 @@
 
 /* ------------------------------------------------------------------------------------------------ */
 
-u32_t G_IPnetDefGW;									/* Default static default gateway address		*/
-u32_t G_IPnetDefIP;									/* Default static default IP address			*/
-u32_t G_IPnetDefNM;									/* Default net mask								*/
-int   G_IPnetStatic = 0;							/* If using static or dynamic IP address		*/
+u32_t G_IPnetDefGW;								/* Default static default gateway address		*/
+u32_t G_IPnetDefIP;								/* Default static default IP address			*/
+u32_t G_IPnetDefNM;								/* Default net mask								*/
+int   G_IPnetStatic = 0;						/* If using static or dynamic IP address		*/
 volatile u32_t G_IPnetTime=0;
 
-static u32_t ARPTimer;
-static int   DHCPstate;
-static u32_t DHCPtimeCoarse;
-static u32_t DHCPtimeFine;
-static u32_t TCPTimer;
+static u32_t ARPTimer       __attribute__((unused));
+static int   DHCPstate      __attribute__((unused));
+static u32_t DHCPtimeCoarse __attribute__((unused));
+static u32_t DHCPtimeFine   __attribute__((unused));
+static u32_t TCPTimer       __attribute__((unused));
 
 static struct netif g_NetIF;						/* lwIP network interface descriptor			*/
 
 /* ------------------------------------------------------------------------------------------------ */
-
-void DHCPprocess(void);
 
 void GetMACaddr(u8_t MACaddr[NETIF_MAX_HWADDR_LEN])
 {
@@ -77,11 +74,13 @@ void GetMACaddr(u8_t MACaddr[NETIF_MAX_HWADDR_LEN])
 
 /* ------------------------------------------------------------------------------------------------ */
 
+#if LWIP_VER == 1
+
 void LwIP_Init(void)
 {
-struct ip_addr IPaddr;
-struct ip_addr NetMask;
-struct ip_addr GateWay;
+	ip_addr_t IPaddr;
+	ip_addr_t NetMask;
+	ip_addr_t GateWay;
 
 	G_IPnetTime     = 0;
 
@@ -117,19 +116,20 @@ struct ip_addr GateWay;
 
 	netif_set_up(&g_NetIF);							/* Doc states this must be called				*/
 
-	return;
+  #if !NO_SYS
+	if (G_IPnetStatic == 0) dhcp_start(&g_NetIF);
+  #endif
 }
 
-/* ------------------------------------------------------------------------------------------------ */
-
+#if NO_SYS
 void LwIP_Packet(void)
 {
 	ethernetif_input(&g_NetIF);
 	return;
 }
+#endif
 
-/* ------------------------------------------------------------------------------------------------ */
-
+void DHCPprocess(void);
 void LwIP_Periodic(volatile u32_t Time)
 {
 	if ((Time-TCPTimer) >= TCP_TMR_INTERVAL) {		/* TCP is processed periodicaly					*/
@@ -158,15 +158,12 @@ void LwIP_Periodic(volatile u32_t Time)
   	}
 }
 
-/* ------------------------------------------------------------------------------------------------ */
-
 void DHCPprocess(void)
 {
-struct ip_addr IPaddr;
-u32_t          DynamicIP;
-struct ip_addr GateWay;
-struct ip_addr NetMask;
-//static int     Toggle = 0;
+	ip_addr_t IPaddr;
+	u32_t     DynamicIP;
+	ip_addr_t GateWay;
+	ip_addr_t NetMask;
 
 	switch (DHCPstate) {
 		case DHCP_START:
@@ -223,16 +220,85 @@ struct ip_addr NetMask;
 		default:
 			break;
 	}
-
-	return;
 }
+
+#elif LWIP_VER == 2
+
+void LwIP_Init(void)
+{
+	ip_addr_t IPaddr;
+	ip_addr_t NetMask;
+	ip_addr_t GateWay;
+
+	G_IPnetTime     = 0;
+
+	mem_init();										/* Init dynamic memory (size is MEM_SIZE)		*/
+	memp_init();									/* Init the mempry pools (number is MEMP_NUM_x)	*/
+
+	if (G_IPnetStatic == 0) {						/* Request for dynamic address					*/
+		ip_addr_set_zero_ip4(&IPaddr);
+		ip_addr_set_zero_ip4(&NetMask);
+		ip_addr_set_zero_ip4(&GateWay);
+	}
+	else {											/* Request for static address					*/
+		ip4_addr_set_u32(&IPaddr,  G_IPnetDefIP);
+		ip4_addr_set_u32(&NetMask, G_IPnetDefNM);
+		ip4_addr_set_u32(&GateWay, G_IPnetDefGW);
+
+		PRINTF("Static IP address : %s\n", ip4_ntop(G_IPnetDefIP));
+		PRINTF("The webserver is ready\n");
+		PRINTF("The Ethernet interface is ready\n");
+
+		GPIO_SET(LED_0, 0);							/* Turn ON LED #0								*/
+	}
+
+	netif_add(&g_NetIF, &IPaddr, &NetMask, &GateWay, NULL, &ethernetif_init, &ethernet_input);
+
+	netif_set_default(&g_NetIF);					/* This is the default network interface		*/
+
+	netif_set_up(&g_NetIF);							/* Doc states this must be called				*/
+
+	if (netif_is_link_up(&g_NetIF))
+	{
+		/* When the netif is fully configured this function must be called */
+		netif_set_up(&g_NetIF);
+	}
+	else
+	{
+		/* When the netif link is down this function must be called */
+		netif_set_down(&g_NetIF);
+	}
+
+	if (G_IPnetStatic == 0)
+	{
+		/*  Creates a new DHCP client for this interface on the first call.
+		    Note: you must call dhcp_fine_tmr() and dhcp_coarse_tmr() at
+		    the predefined regular intervals after starting the client.
+		    You can peek in the netif->dhcp struct for the actual DHCP status.*/
+		int cnt = 0;
+		int err = dhcp_start(&g_NetIF);
+		PRINTF("LwIP DHCP init %s.\n", (err == ERR_OK) ? "success" : "fail");
+		PRINTF("Waiting DHCP ready ...");
+		while (ip_addr_cmp(&(g_NetIF.ip_addr), &IPaddr))
+		{
+			OSTimeDly(1);
+			if (cnt++ % 1000 == 0) PUTS(".");
+		}
+		PRINTF("\nDynamic IP address : %s\n", ip4_ntop(g_NetIF.ip_addr.addr));
+		PRINTF("The Ethernet interface is ready\n");
+	}
+}
+
+#endif
+
+/* ------------------------------------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------------------------------------ */
 
 const char * ip4_ntop(u32_t Addr)
 {
-static char buff[20];
-u8_t *Baddr;
+	static char buff[20];
+	u8_t *Baddr;
 
 	Baddr = (u8_t *)&Addr;
   #if BYTE_ORDER == BIG_ENDIAN
@@ -243,14 +309,28 @@ u8_t *Baddr;
 	return buff;
 }
 
-/* ------------------------------------------------------------------------------------------------ */
-
+// Under baremetal, Update system tick, main loop will call LwIP_Periodic()
 void Time_Update(void)
 {
 	G_IPnetTime += SYSTICK_MS;	// when no OS
 }
 
-#include "os.h"
+#include "arch/sys_arch.h"
+
+// Under uC/OS, use time tick hook to call LwIP_Periodic()
+void App_TimeTickHook(void)
+{
+	G_IPnetTime = OSTimeGet();
+	if (g_NetIF.flags & NETIF_FLAG_UP)	// if input function assigned, lwip should start work
+	{
+#if LWIP_VER == 1
+		LwIP_Periodic(G_IPnetTime);
+#elif LWIP_VER == 2
+		sys_check_timeouts();
+#endif
+	}
+}
+
 u32_t sys_now(void)
 {
 	return OSTimeGet();

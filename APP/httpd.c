@@ -77,6 +77,7 @@
  * - split too long functions into multiple smaller functions?
  * - support more file types?
  */
+#include "cfg/lwipopts.h"
 #include "lwip/debug.h"
 #include "lwip/stats.h"
 #include "httpd.h"
@@ -2076,16 +2077,17 @@ static err_t http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 /**
  * Initialize the httpd with the specified local address.
  */
-static void httpd_init_addr(struct ip_addr *local_addr)
+static void httpd_init_addr(const ip_addr_t *local_addr)
 {
   struct tcp_pcb *pcb;
+  ip_addr_t local_addr_1 = *local_addr;
   err_t err;
 
   pcb = tcp_new();
   LWIP_ASSERT("httpd_init: tcp_new failed", pcb != NULL);
   tcp_setprio(pcb, HTTPD_TCP_PRIO);
   /* set SOF_REUSEADDR here to explicitly bind httpd to multiple interfaces */
-  err = tcp_bind(pcb, local_addr, HTTPD_SERVER_PORT);
+  err = tcp_bind(pcb, &local_addr_1, HTTPD_SERVER_PORT);
   LWIP_ASSERT("httpd_init: tcp_bind failed", err == ERR_OK);
   pcb = tcp_listen(pcb);
   LWIP_ASSERT("httpd_init: tcp_listen failed", pcb != NULL);

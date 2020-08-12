@@ -76,6 +76,11 @@ ASM_SRCS += $(OS_DIR)/uC-CPU/ARM-Cortex-A/RealView/cpu_a.s
 OS_SRCS += $(OS_DIR)/uC-CPU/cpu_core.c
 OS_OBJS := $(OS_SRCS:.c=.o)
 
+# LwIP version choice
+LWIP_VER := 2
+CFLAGS += -DLWIP_VER=$(LWIP_VER)
+
+ifeq (1,$(LWIP_VER))
 # lwip 1.4.1 objects
 LWIP_DIR := lwip-1.4.1
 
@@ -95,6 +100,21 @@ LWIP_API_OBJS := $(addprefix $(LWIP_DIR)/src/api/,$(LWIP_API_OBJS))
 LWIP_PORT_OBJS := $(LWIP_DIR)/src/netif/etharp.o
 
 LWIP_OBJS := $(LWIP_CORE_OBJS) $(LWIP_IPV4_OBJS) $(LWIP_API_OBJS) $(LWIP_PORT_OBJS)
+
+else	# lwip v1 or v2
+
+# lwip 2.1.2 objects
+LWIP_DIR := lwip-2.1.2
+LWIP_SRCS := $(shell find $(LWIP_DIR)/src/core -name "*.c")
+LWIP_API_OBJS := api_lib.o api_msg.o err.o netbuf.o netdb.o netifapi.o sockets.o tcpip.o
+LWIP_SRCS += $(addprefix $(LWIP_DIR)/src/api/,$(LWIP_API_OBJS))
+LWIP_SRCS += $(LWIP_DIR)/src/netif/ethernet.o
+LWIP_SRCS += $(LWIP_DIR)/src/apps/lwiperf/lwiperf.c
+LWIP_OBJS := $(LWIP_SRCS:.c=.o)
+LWIP_INCS := $(LWIP_DIR)/src/include $(CFG_INCS) \
+	$(LWIP_DIR)/ports/CycloneV $(ALT_LIB)/include $(ALT_LIB)/include/socal $(OS_INCS)
+
+endif
 
 # application objects
 APP_INCS := APP BSP BSP/OS $(LWIP_INCS)

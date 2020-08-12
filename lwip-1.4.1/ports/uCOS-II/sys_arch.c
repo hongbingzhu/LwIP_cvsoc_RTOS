@@ -32,6 +32,11 @@
 
 #define SYS_ARCH_GLOBALS
 
+#if !NO_SYS
+#include "ucos_ii.h"
+#include "arch/sys_arch.h"
+#endif
+
 /* lwIP includes. */
 #include "lwip/debug.h"
 #include "lwip/def.h"
@@ -40,8 +45,6 @@
 #include "lwip/stats.h"
 
 #if !NO_SYS
-#include "ucos_ii.h"
-#include "arch/sys_arch.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -136,6 +139,17 @@ void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 
 /* Try to post the "msg" to the mailbox. */
 err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
+{
+	sys_mbox_t m_box = *mbox;
+	if (msg == NULL) msg = (void *)&pvNullPointer;
+
+	if ((OSQPost(m_box->pQ, msg)) != OS_NO_ERR) {
+		return ERR_MEM;
+	}
+	return ERR_OK;
+}
+
+err_t sys_mbox_trypost_fromisr(sys_mbox_t *mbox, void *msg)
 {
 	sys_mbox_t m_box = *mbox;
 	if (msg == NULL) msg = (void *)&pvNullPointer;
@@ -546,16 +560,39 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 	return task_id;
 }
 
+sys_prot_t sys_arch_protect(void)
+{
+	sys_prot_t cpu_sr;
+	OS_ENTER_CRITICAL();
+	return cpu_sr;
+}
+void sys_arch_unprotect(sys_prot_t xValue)
+{
+	sys_prot_t cpu_sr = xValue;
+    OS_EXIT_CRITICAL();
+}
+
 /**
  * Sleep for some ms. Timeouts are NOT processed while sleeping.
  *
  * @param ms number of milliseconds to sleep
  */
-void sys_msleep(u32_t ms)
+void _sys_msleep(u32_t ms)
 {
 	OSTimeDly(ms);
 }
 
+int errno;
+
 /*--------------------------------------------------------------------------------------------------*/
 #endif // !NO_SYS
+
+/*--------------------------------------------------------------------------------------------------*/
+
+void sys_assert(char *msg)
+{
+	printf(msg); printf("\r\n");
+	for (;;) { }
+}
+
 /* EOF */

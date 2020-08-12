@@ -41,7 +41,6 @@
 #include "ethernetif.h"
 #include "alt_eth_dma.h"
 #include <string.h>
-#include "app_def.h"
 
 #if !NO_SYS
 #include "arch/sys_arch.h"
