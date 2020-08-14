@@ -306,8 +306,8 @@ err_t ethernetif_init(struct netif *netif)
 	netif->output     = etharp_output;
 	netif->linkoutput = low_level_output;
 
-	extern void sys_init(void);
-	sys_init();
+	//extern void sys_init(void);	// FIXME, where call on lwip 1.4.1
+	//sys_init();
 
 	low_level_init(netif);						/* Initialize the hardware							*/
 
@@ -323,7 +323,7 @@ err_t ethernetif_init(struct netif *netif)
 
 void Emac0_IRQHandler(u32_t cpu_id)
 {
-												/* Check for a status change on the link			*/
+	 											/* Check for a status change on the link			*/
 	if (EMAC_GMAC_INTERRUPT_STATUS & INTERRUPT_STATUS_RGSMIIIS) {
 	  #if 1
 		do {									/* GMAC status must be read to clear the interrupt	*/
@@ -341,7 +341,7 @@ void Emac0_IRQHandler(u32_t cpu_id)
 	else {										/* Not a link status change							*/
 		if (EMAC_DMA_STATUS & DMA_STATUS_RI) {	/* Was a new frame received ?						*/
 			sys_sem_signal(&EthRXsem);			/* Post the semaphore ethernetif_input() blocks on	*/
-			//PRINTF("*\n");
+			//printf("#");
 		}
 		EMAC_DMAclearPendIT(DMA_STATUS_RI|DMA_STATUS_NIS);	/* Clear RX & Normal interrupt flags	*/
 	}

@@ -479,7 +479,7 @@ void sys_init(void)
 	OSMemNameSet(pQueueMem, "LwIP Queue", &ucErr);
 	LWIP_ASSERT("sys_init: failed OSMemCreate Queue", ucErr == OS_NO_ERR);
 	pStackMem = OSMemCreate((void *)LwIP_Task_Stk, LWIP_TASK_MAX, LWIP_STK_SIZE * sizeof(OS_STK), &ucErr);
-	OSMemNameSet(pQueueMem, "LwIP Stack", &ucErr);
+	OSMemNameSet(pStackMem, "LwIP Stack", &ucErr);
 	LWIP_ASSERT("sys_init: failed OSMemCreate Stack", ucErr == OS_NO_ERR);
 }
 

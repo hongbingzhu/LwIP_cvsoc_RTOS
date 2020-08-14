@@ -149,7 +149,7 @@ int lwip_app_main(void)
 	for (int i = 0; i < WAIT_STATIC_IP; i++) {
 		for (int k = 0; k < 1000/20; k++)
 			OSTimeDly(20);
-		printf("\r\r\r\r%d s", WAIT_STATIC_IP-i);
+		printf("\r\r\r\r%d s", WAIT_STATIC_IP-1-i);
 		G_IPnetStatic = GetKey();					/* Check if user pressed a key					*/
 		if (G_IPnetStatic) break;
 	}

@@ -27,8 +27,9 @@
 #include "lwip/mem.h"
 #include "lwip/memp.h"
 #include "lwip/dhcp.h"
-#include "ethernetif.h"
+#include "lwip/tcpip.h"
 #include "alt_ethernet.h"
+#include "ethernetif.h"
 #include "WebServer.h"	// hardware interface, for LED.
 #include "NetAddr.h"
 
@@ -235,6 +236,8 @@ void LwIP_Init(void)
 	mem_init();										/* Init dynamic memory (size is MEM_SIZE)		*/
 	memp_init();									/* Init the mempry pools (number is MEMP_NUM_x)	*/
 
+	tcpip_init(NULL, NULL);
+
 	if (G_IPnetStatic == 0) {						/* Request for dynamic address					*/
 		ip_addr_set_zero_ip4(&IPaddr);
 		ip_addr_set_zero_ip4(&NetMask);
@@ -252,11 +255,9 @@ void LwIP_Init(void)
 		GPIO_SET(LED_0, 0);							/* Turn ON LED #0								*/
 	}
 
-	netif_add(&g_NetIF, &IPaddr, &NetMask, &GateWay, NULL, &ethernetif_init, &ethernet_input);
+	netif_add(&g_NetIF, &IPaddr, &NetMask, &GateWay, NULL, &ethernetif_init, &tcpip_input);
 
 	netif_set_default(&g_NetIF);					/* This is the default network interface		*/
-
-	netif_set_up(&g_NetIF);							/* Doc states this must be called				*/
 
 	if (netif_is_link_up(&g_NetIF))
 	{
@@ -278,14 +279,14 @@ void LwIP_Init(void)
 		int cnt = 0;
 		int err = dhcp_start(&g_NetIF);
 		PRINTF("LwIP DHCP init %s.\n", (err == ERR_OK) ? "success" : "fail");
-		PRINTF("Waiting DHCP ready ...");
+		/*PRINTF("Waiting DHCP ready ...");
 		while (ip_addr_cmp(&(g_NetIF.ip_addr), &IPaddr))
 		{
 			OSTimeDly(1);
 			if (cnt++ % 1000 == 0) PUTS(".");
 		}
 		PRINTF("\nDynamic IP address : %s\n", ip4_ntop(g_NetIF.ip_addr.addr));
-		PRINTF("The Ethernet interface is ready\n");
+		PRINTF("The Ethernet interface is ready\n"); */
 	}
 }
 
