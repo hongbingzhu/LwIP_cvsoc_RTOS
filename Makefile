@@ -125,7 +125,7 @@ ALT_SRCS := $(addprefix APP/,alt_16550_uart.c alt_clock_manager.c alt_generalpur
 APP_SRCS := $(addprefix BSP/,OS/bsp_os.c bsp_int.c bsp.c cpu_bsp.c)
 ASM_SRCS += $(addprefix BSP/ARM_Compiler/,armv7a_tthelp.s bsp_cache.s startup.s)
 APP_SRCS += $(addprefix APP/,app.c alt_eth_dma.c alt_ethernet.c \
-	fs.c httpd_cgi_ssi.c httpd.c httpserver.c NetAddr.c)
+	fs.c httpd_cgi_ssi.c httpd.c httpserver.c NetAddr.c iperf.c)
 APP_SRCS += $(ALT_SRCS)
 APP_SRCS += $(LWIP_DIR)/ports/CycloneV/Standalone/ethernetif.c
 APP_SRCS += $(LWIP_DIR)/ports/CycloneV/RTOS/ethernetif.c
